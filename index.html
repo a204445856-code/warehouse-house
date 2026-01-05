@@ -1,4 +1,4 @@
- <!doctype html>
+<!doctype html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8">
@@ -11,17 +11,14 @@ header{background:#fff;padding:14px;border-bottom:1px solid #ddd}
 main{padding:16px;max-width:1100px;margin:auto}
 .card{background:#fff;border-radius:12px;padding:14px;border:1px solid #ddd;margin-bottom:16px}
 input,select,textarea,button{
-  width:100%;
-  padding:10px;
-  border-radius:8px;
-  border:1px solid #ccc;
-  margin-top:6px
+  width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:6px
 }
 button{cursor:pointer;font-weight:bold;background:#2563eb;color:#fff}
-.item{display:flex;gap:10px;align-items:center;border:1px solid #ddd;padding:10px;border-radius:10px;margin-top:10px}
-img{width:50px;height:50px;border-radius:8px;object-fit:cover}
 .row{display:grid;gap:10px}
 @media(min-width:600px){.row{grid-template-columns:1fr 1fr}}
+.item{display:flex;gap:10px;align-items:center;border:1px solid #ddd;padding:10px;border-radius:10px;margin-top:10px}
+img{width:50px;height:50px;border-radius:8px;object-fit:cover}
+.danger{background:#ef4444}
 </style>
 </head>
 
@@ -40,32 +37,18 @@ img{width:50px;height:50px;border-radius:8px;object-fit:cover}
 
 <label>التصنيف</label>
 <select id="category">
-  <option value="">اختر التصنيف</option>
+  <option value="">اختر</option>
   <option>أدوات</option>
   <option>كهرباء</option>
   <option>مطبخ</option>
-  <option>سباكة</option>
   <option>تنظيف</option>
 </select>
 
 <div class="row">
   <div>
-    <label>رقم الرف *</label>
-    <select id="shelf">
-      <option value="">اختر</option>
-     <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-  <option>6</option><option>7</option><option>8</option><option>9</option><option>10</option>
-  <option>11</option><option>12</option><option>13</option><option>14</option><option>15</option>
-  <option>16</option><option>17</option><option>18</option><option>19</option><option>20</option>
-  <option>21</option><option>22</option><option>23</option><option>24</option><option>25</option>
-  <option>26</option><option>27</option><option>28</option><option>29</option><option>30</option>
-  <option>31</option><option>32</option><option>33</option><option>34</option><option>35</option>
-  <option>36</option><option>37</option><option>38</option><option>39</option><option>40</option>
-  <option>41</option><option>42</option><option>43</option><option>44</option><option>45</option>
-  <option>46</option><option>47</option><option>48</option><option>49</option><option>50</option>
-    </select>
+    <label>رقم الرف</label>
+    <select id="shelf"></select>
   </div>
-
   <div>
     <label>الجهة</label>
     <select id="side">
@@ -87,15 +70,14 @@ img{width:50px;height:50px;border-radius:8px;object-fit:cover}
       <option>سفلي</option>
     </select>
   </div>
-
   <div>
-    <label>منطقة / قسم</label>
+    <label>المنطقة</label>
     <select id="zone">
       <option value="">اختر</option>
       <option>البيت</option>
       <option>الملحق</option>
-      <option>المخزن</option>
       <option>الكراج</option>
+      <option>المخزن</option>
     </select>
   </div>
 </div>
@@ -104,7 +86,7 @@ img{width:50px;height:50px;border-radius:8px;object-fit:cover}
 <textarea id="notes"></textarea>
 
 <label>صورة</label>
-<input id="image" type="file" accept="image/*">
+<input type="file" id="image" accept="image/*">
 
 <button onclick="save()">💾 حفظ</button>
 </div>
@@ -117,17 +99,60 @@ img{width:50px;height:50px;border-radius:8px;object-fit:cover}
 </main>
 
 <script>
-const el=id=>document.getElementById(id);
+/* ========= إعداد الربط مع Google Sheets ========= */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIeQj-UTxhaJ27mdcaOkZH2g7l5tu13_cDuyCWu4FLEoXCiacgiL6AtOCaYVyJvdLp/exec";
+
+/* ========= أدوات ========= */
+const el = id => document.getElementById(id);
 const nameEl=el("name"),catEl=el("category"),shelfEl=el("shelf"),
 sideEl=el("side"),levelEl=el("level"),zoneEl=el("zone"),
-notesEl=el("notes"),imageEl=el("image"),editIndexEl=el("editIndex"),
-listEl=el("list");
+notesEl=el("notes"),imageEl=el("image"),
+editIndexEl=el("editIndex"),listEl=el("list");
 
-let items=JSON.parse(localStorage.getItem("warehouse_items")||"[]");
+function uid(){
+  return "id-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
+}
 
+/* ========= توليد 50 رف ========= */
+shelfEl.innerHTML='<option value="">اختر</option>';
+for(let i=1;i<=50;i++){
+  shelfEl.innerHTML+=`<option>${i}</option>`;
+}
+
+/* ========= API ========= */
+async function apiGet(){
+  const r=await fetch(SCRIPT_URL);
+  return await r.json();
+}
+async function apiPost(payload){
+  const r=await fetch(SCRIPT_URL,{
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(payload)
+  });
+  return await r.json();
+}
+
+/* ========= البيانات ========= */
+let items=[];
+
+async function load(){
+  try{
+    const d=await apiGet();
+    items=d.items||[];
+    localStorage.setItem("warehouse_items",JSON.stringify(items));
+  }catch{
+    items=JSON.parse(localStorage.getItem("warehouse_items")||"[]");
+  }
+  render();
+}
+
+/* ========= حفظ ========= */
 function save(){
   if(!nameEl.value) return alert("اسم الغرض مطلوب");
+
   const obj={
+    id: editIndexEl.value==="" ? uid() : items[editIndexEl.value].id,
     name:nameEl.value,
     category:catEl.value,
     shelf:shelfEl.value,
@@ -135,28 +160,29 @@ function save(){
     level:levelEl.value,
     zone:zoneEl.value,
     notes:notesEl.value,
-    image:"",
-    date:new Date().toLocaleString("ar-SA")
+    date:new Date().toLocaleString("ar-SA"),
+    image:""
   };
 
-  const idx=editIndexEl.value;
   const file=imageEl.files[0];
-
   if(file){
     const r=new FileReader();
-    r.onload=e=>{obj.image=e.target.result;finish(obj,idx)};
+    r.onload=e=>{obj.image=e.target.result;finish(obj)};
     r.readAsDataURL(file);
-  }else finish(obj,idx);
+  }else finish(obj);
 }
 
-function finish(obj,idx){
+function finish(obj){
+  const idx=editIndexEl.value;
   if(idx==="") items.push(obj);
   else items[idx]=obj;
 
   localStorage.setItem("warehouse_items",JSON.stringify(items));
+  apiPost({item:obj}).catch(()=>alert("لم يتم الرفع للسحابة"));
   clearForm(); render();
 }
 
+/* ========= عرض ========= */
 function render(){
   listEl.innerHTML="";
   items.forEach((i,idx)=>{
@@ -169,25 +195,27 @@ function render(){
         رف ${i.shelf} - ${i.side} - ${i.level}<br>
         ${i.category} / ${i.zone}
       </div>
-      <button onclick="del(${idx})">🗑️</button>`;
+      <button class="danger" onclick="delItem(${idx})">🗑️</button>`;
     listEl.appendChild(d);
   });
 }
 
-function del(i){
-  if(confirm("حذف؟")){
-    items.splice(i,1);
-    localStorage.setItem("warehouse_items",JSON.stringify(items));
-    render();
-  }
+/* ========= حذف ========= */
+function delItem(i){
+  const id=items[i].id;
+  items.splice(i,1);
+  localStorage.setItem("warehouse_items",JSON.stringify(items));
+  render();
+  apiPost({action:"delete",item:{id}});
 }
 
+/* ========= تنظيف ========= */
 function clearForm(){
   [nameEl,catEl,shelfEl,sideEl,levelEl,zoneEl,notesEl,imageEl].forEach(e=>e.value="");
   editIndexEl.value="";
 }
 
-render();
+load();
 </script>
 
 </body>

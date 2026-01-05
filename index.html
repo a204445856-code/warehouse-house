@@ -6,213 +6,213 @@
 <title>📦 مستودع البيت</title>
 
 <style>
-body{margin:0;font-family:Tahoma;background:#f6f7fb}
-header{background:#fff;padding:14px;border-bottom:1px solid #ddd}
-main{padding:16px;max-width:1100px;margin:auto}
-.card{background:#fff;border-radius:12px;padding:14px;border:1px solid #ddd;margin-bottom:16px}
-input,select,textarea,button{
-  width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;margin-top:6px
+body{
+  margin:0;
+  font-family:Tahoma, Arial;
+  background:#f6f7fb;
 }
-button{cursor:pointer;font-weight:bold;background:#2563eb;color:#fff}
-.row{display:grid;gap:10px}
-@media(min-width:600px){.row{grid-template-columns:1fr 1fr}}
-.item{display:flex;gap:10px;align-items:center;border:1px solid #ddd;padding:10px;border-radius:10px;margin-top:10px}
-img{width:50px;height:50px;border-radius:8px;object-fit:cover}
-.danger{background:#ef4444}
+header{
+  background:#fff;
+  padding:12px;
+  border-bottom:1px solid #ddd;
+}
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:16px;
+}
+h2{margin-top:0}
+
+input, select, textarea, button{
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  cursor:pointer;
+  border:none;
+  font-weight:bold;
+}
+
+.save{background:#2563eb;color:#fff}
+.clear{background:#9ca3af;color:#fff}
+
+.item{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:10px;
+  margin-bottom:8px;
+}
+
+.actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.edit{
+  background:#f59e0b;
+  color:#fff;
+  font-size:12px;
+  padding:6px;
+  border-radius:6px;
+}
+
+.delete{
+  background:#ef4444;
+  color:#fff;
+  font-size:12px;
+  padding:6px;
+  border-radius:6px;
+}
 </style>
 </head>
 
 <body>
-<header><h2>📦 مستودع البيت</h2></header>
+<header>
+<h1>📦 مستودع البيت</h1>
+</header>
 
 <main>
 
 <div class="card">
-<h3>إضافة غرض</h3>
+<h2>إضافة غرض</h2>
 
-<input type="hidden" id="editIndex">
-
-<label>اسم الغرض *</label>
-<input id="name">
-
-<label>التصنيف</label>
-<select id="category">
-  <option value="">اختر</option>
-  <option>أدوات</option>
-  <option>كهرباء</option>
-  <option>مطبخ</option>
-  <option>تنظيف</option>
+<input id="name" placeholder="اسم الغرض *">
+<input id="category" placeholder="التصنيف">
+<select id="shelf"></select>
+<select id="side">
+  <option value="">الجهة</option>
+  <option>يمين</option>
+  <option>يسار</option>
 </select>
+<select id="level">
+  <option value="">المستوى</option>
+  <option>علوي</option>
+  <option>وسط</option>
+  <option>سفلي</option>
+</select>
+<textarea id="notes" placeholder="ملاحظات"></textarea>
 
-<div class="row">
-  <div>
-    <label>رقم الرف</label>
-    <select id="shelf"></select>
-  </div>
-  <div>
-    <label>الجهة</label>
-    <select id="side">
-      <option value="">اختر</option>
-      <option>يمين</option>
-      <option>يسار</option>
-      <option>وسط</option>
-    </select>
-  </div>
-</div>
-
-<div class="row">
-  <div>
-    <label>المستوى</label>
-    <select id="level">
-      <option value="">اختر</option>
-      <option>علوي</option>
-      <option>متوسط</option>
-      <option>سفلي</option>
-    </select>
-  </div>
-  <div>
-    <label>المنطقة</label>
-    <select id="zone">
-      <option value="">اختر</option>
-      <option>البيت</option>
-      <option>الملحق</option>
-      <option>الكراج</option>
-      <option>المخزن</option>
-    </select>
-  </div>
-</div>
-
-<label>ملاحظات</label>
-<textarea id="notes"></textarea>
-
-<label>صورة</label>
-<input type="file" id="image" accept="image/*">
-
-<button onclick="save()">💾 حفظ</button>
+<button class="save" onclick="save()">💾 حفظ</button>
+<button class="clear" onclick="clearForm()">مسح</button>
 </div>
 
 <div class="card">
-<h3>العرض</h3>
+<h2>العرض</h2>
 <div id="list"></div>
 </div>
 
 </main>
 
 <script>
-/* ========= إعداد الربط مع Google Sheets ========= */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzIeQj-UTxhaJ27mdcaOkZH2g7l5tu13_cDuyCWu4FLEoXCiacgiL6AtOCaYVyJvdLp/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyg8Z2xLXWVvrnHw4PdvlWrC0H1C3qsJe-EheRGazo0Ad3zuxm3QXHc0V2e3FgHYWbO/exec";
 
-/* ========= أدوات ========= */
-const el = id => document.getElementById(id);
-const nameEl=el("name"),catEl=el("category"),shelfEl=el("shelf"),
-sideEl=el("side"),levelEl=el("level"),zoneEl=el("zone"),
-notesEl=el("notes"),imageEl=el("image"),
-editIndexEl=el("editIndex"),listEl=el("list");
+let editingId = null;
 
-function uid(){
-  return "id-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8);
-}
-
-/* ========= توليد 50 رف ========= */
-shelfEl.innerHTML='<option value="">اختر</option>';
+// إنشاء قائمة الرفوف 1–50
+const shelfSel = document.getElementById("shelf");
+shelfSel.innerHTML = `<option value="">رقم الرف</option>`;
 for(let i=1;i<=50;i++){
-  shelfEl.innerHTML+=`<option>${i}</option>`;
+  shelfSel.innerHTML += `<option>${i}</option>`;
 }
 
-/* ========= API ========= */
 async function apiGet(){
-  const r=await fetch(SCRIPT_URL);
-  return await r.json();
+  const res = await fetch(SCRIPT_URL);
+  return res.json();
 }
-async function apiPost(payload){
-  const r=await fetch(SCRIPT_URL,{
+
+async function apiPost(data){
+  const res = await fetch(SCRIPT_URL,{
     method:"POST",
     headers:{"Content-Type":"application/json"},
-    body:JSON.stringify(payload)
+    body:JSON.stringify(data)
   });
-  return await r.json();
+  return res.json();
 }
-
-/* ========= البيانات ========= */
-let items=[];
 
 async function load(){
-  try{
-    const d=await apiGet();
-    items=d.items||[];
-    localStorage.setItem("warehouse_items",JSON.stringify(items));
-  }catch{
-    items=JSON.parse(localStorage.getItem("warehouse_items")||"[]");
-  }
-  render();
+  const items = await apiGet();
+  render(items);
 }
 
-/* ========= حفظ ========= */
-function save(){
-  if(!nameEl.value) return alert("اسم الغرض مطلوب");
-
-  const obj={
-    id: editIndexEl.value==="" ? uid() : items[editIndexEl.value].id,
-    name:nameEl.value,
-    category:catEl.value,
-    shelf:shelfEl.value,
-    side:sideEl.value,
-    level:levelEl.value,
-    zone:zoneEl.value,
-    notes:notesEl.value,
-    date:new Date().toLocaleString("ar-SA"),
-    image:""
-  };
-
-  const file=imageEl.files[0];
-  if(file){
-    const r=new FileReader();
-    r.onload=e=>{obj.image=e.target.result;finish(obj)};
-    r.readAsDataURL(file);
-  }else finish(obj);
-}
-
-function finish(obj){
-  const idx=editIndexEl.value;
-  if(idx==="") items.push(obj);
-  else items[idx]=obj;
-
-  localStorage.setItem("warehouse_items",JSON.stringify(items));
-  apiPost({item:obj}).catch(()=>alert("لم يتم الرفع للسحابة"));
-  clearForm(); render();
-}
-
-/* ========= عرض ========= */
-function render(){
-  listEl.innerHTML="";
-  items.forEach((i,idx)=>{
-    const d=document.createElement("div");
-    d.className="item";
-    d.innerHTML=`
-      <img src="${i.image||'https://via.placeholder.com/50'}">
+function render(items){
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+  items.forEach(i=>{
+    const div = document.createElement("div");
+    div.className="item";
+    div.innerHTML = `
       <div>
         <b>${i.name}</b><br>
-        رف ${i.shelf} - ${i.side} - ${i.level}<br>
-        ${i.category} / ${i.zone}
+        رف ${i.shelf || "-"} / ${i.side || "-"} / ${i.level || "-"}
       </div>
-      <button class="danger" onclick="delItem(${idx})">🗑️</button>`;
-    listEl.appendChild(d);
+      <div class="actions">
+        <button class="edit" onclick="editItem('${i.id}')">تعديل</button>
+        <button class="delete" onclick="deleteItem('${i.id}')">حذف</button>
+      </div>
+    `;
+    list.appendChild(div);
   });
 }
 
-/* ========= حذف ========= */
-function delItem(i){
-  const id=items[i].id;
-  items.splice(i,1);
-  localStorage.setItem("warehouse_items",JSON.stringify(items));
-  render();
-  apiPost({action:"delete",item:{id}});
+async function save(){
+  if(!name.value.trim()){
+    alert("اسم الغرض مطلوب");
+    return;
+  }
+
+  await apiPost({
+    action: editingId ? "update" : "add",
+    id: editingId,
+    name: name.value,
+    category: category.value,
+    shelf: shelf.value,
+    side: side.value,
+    level: level.value,
+    notes: notes.value
+  });
+
+  clearForm();
+  load();
 }
 
-/* ========= تنظيف ========= */
 function clearForm(){
-  [nameEl,catEl,shelfEl,sideEl,levelEl,zoneEl,notesEl,imageEl].forEach(e=>e.value="");
-  editIndexEl.value="";
+  document.querySelectorAll("input,select,textarea").forEach(i=>i.value="");
+  editingId=null;
+}
+
+async function editItem(id){
+  const items = await apiGet();
+  const o = items.find(x=>x.id===id);
+  if(!o) return;
+
+  editingId=id;
+  name.value=o.name;
+  category.value=o.category;
+  shelf.value=o.shelf;
+  side.value=o.side;
+  level.value=o.level;
+  notes.value=o.notes;
+}
+
+async function deleteItem(id){
+  if(!confirm("حذف الغرض؟")) return;
+  await apiPost({action:"delete", id});
+  load();
 }
 
 load();
@@ -220,3 +220,4 @@ load();
 
 </body>
 </html>
+

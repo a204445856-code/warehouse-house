@@ -1,356 +1,182 @@
-      
-<!doctype html>
+ <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>📦 مستودع البيت</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>📦 مستودع البيت</title>
 
-  <style>
-    :root{
-      --b:#2563eb;
-      --bg:#f6f7fb;
-      --card:#ffffff;
-      --ok:#10b981;
-      --warn:#f59e0b;
-      --bd:#e5e7eb;
-      --txt:#111827;
-      --r:14px;
-      --shadow:0 10px 25px rgba(0,0,0,.08);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;
-      background:var(--bg);
-      color:var(--txt);
-    }
-    header{
-      background:var(--card);
-      border-bottom:1px solid var(--bd);
-      padding:14px;
-      position:sticky;
-      top:0;
-      z-index:10;
-    }
-    header h1{
-      margin:0;
-      font-size:20px;
-      display:flex;
-      gap:8px;
-      align-items:center;
-    }
-    main{
-      padding:16px;
-      max-width:1100px;
-      margin:auto;
-    }
-    .grid{
-      display:grid;
-      gap:16px;
-    }
-    @media(min-width:900px){
-      .grid{
-        grid-template-columns:1fr 1.2fr;
-      }
-    }
-    .card{
-      background:var(--card);
-      border:1px solid var(--bd);
-      border-radius:var(--r);
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-    h2{
-      margin:0 0 12px;
-      font-size:16px;
-    }
-    label{
-      font-size:13px;
-      color:#374151;
-      margin-bottom:4px;
-      display:block;
-    }
-    input, select, textarea, button{
-      width:100%;
-      padding:10px;
-      border-radius:10px;
-      border:1px solid var(--bd);
-      font-size:14px;
-      font-family:inherit;
-    }
-    textarea{resize:vertical}
-    .row{
-      display:grid;
-      gap:10px;
-    }
-    @media(min-width:600px){
-      .row{
-        grid-template-columns:1fr 1fr;
-      }
-    }
-    .actions{
-      display:grid;
-      gap:10px;
-      grid-template-columns:1fr 1fr 1fr;
-      margin-top:10px;
-    }
-    .btn{
-      cursor:pointer;
-      border:none;
-      color:#fff;
-      font-weight:600;
-    }
-    .save{background:var(--b)}
-    .clear{background:#9ca3af}
-    .sync{background:#111827}
-    .item{
-      display:grid;
-      gap:10px;
-      grid-template-columns:auto 1fr auto;
-      align-items:center;
-      padding:10px;
-      border-radius:12px;
-      border:1px solid var(--bd);
-      margin-bottom:10px;
-      background:#fafafa;
-    }
-    .item img{
-      width:56px;
-      height:56px;
-      object-fit:cover;
-      border-radius:10px;
-      border:1px solid var(--bd);
-    }
-    .tag{
-      font-size:12px;
-      background:#eef2ff;
-      color:#1e40af;
-      padding:2px 8px;
-      border-radius:999px;
-      margin-inline-start:6px;
-    }
-    .danger{
-      background:#ef4444;
-      color:#fff;
-      border:none;
-      border-radius:8px;
-      padding:6px 10px;
-      cursor:pointer;
-    }
-    .edit{
-      background:#f59e0b;
-      color:#fff;
-      border:none;
-      border-radius:8px;
-      padding:6px 10px;
-      cursor:pointer;
-      margin-left:6px;
-    }
-  </style>
+<style>
+body{margin:0;font-family:Tahoma;background:#f6f7fb}
+header{background:#fff;padding:14px;border-bottom:1px solid #ddd}
+main{padding:16px;max-width:1100px;margin:auto}
+.card{background:#fff;border-radius:12px;padding:14px;border:1px solid #ddd;margin-bottom:16px}
+input,select,textarea,button{
+  width:100%;
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  margin-top:6px
+}
+button{cursor:pointer;font-weight:bold;background:#2563eb;color:#fff}
+.item{display:flex;gap:10px;align-items:center;border:1px solid #ddd;padding:10px;border-radius:10px;margin-top:10px}
+img{width:50px;height:50px;border-radius:8px;object-fit:cover}
+.row{display:grid;gap:10px}
+@media(min-width:600px){.row{grid-template-columns:1fr 1fr}}
+</style>
 </head>
 
 <body>
-<header>
-  <h1>📦 مستودع البيت</h1>
-</header>
+<header><h2>📦 مستودع البيت</h2></header>
 
 <main>
-  <div class="grid">
 
-    <div class="card">
-      <h2>إضافة / تعديل غرض</h2>
+<div class="card">
+<h3>إضافة غرض</h3>
 
-      <input type="hidden" id="editIndex" />
+<input type="hidden" id="editIndex">
 
-      <label>اسم الغرض</label>
-      <input id="name" placeholder="مثال: مفك كبير" />
+<label>اسم الغرض *</label>
+<input id="name">
 
-      <label>التصنيف (اختياري)</label>
-      <input id="category" placeholder="أدوات / كهرباء / مطبخ" />
+<label>التصنيف</label>
+<select id="category">
+  <option value="">اختر التصنيف</option>
+  <option>أدوات</option>
+  <option>كهرباء</option>
+  <option>مطبخ</option>
+  <option>سباكة</option>
+  <option>تنظيف</option>
+</select>
 
-      <div class="row">
-        <div>
-          <label>رقم الرف *</label>
-          <input id="shelf" />
-        </div>
-        <div>
-          <label>الجهة</label>
-          <input id="side" />
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>المستوى</label>
-          <input id="level" />
-        </div>
-        <div>
-          <label>منطقة / قسم</label>
-          <input id="zone" />
-        </div>
-      </div>
-
-      <label>ملاحظات</label>
-      <textarea id="notes" rows="3"></textarea>
-
-      <label>صورة (اختياري)</label>
-      <input id="image" type="file" accept="image/*" />
-
-      <div class="actions">
-        <button class="btn sync" onclick="sync()">مزامنة (اختياري)</button>
-        <button class="btn clear" onclick="clearForm()">مسح الحقول</button>
-        <button class="btn save" onclick="save()">حفظ</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>البحث والعرض</h2>
-      <input id="search" placeholder="ابحث بالاسم أو الرف" oninput="render()" />
-      <div id="list"></div>
-    </div>
-
+<div class="row">
+  <div>
+    <label>رقم الرف *</label>
+    <select id="shelf">
+      <option value="">اختر</option>
+      <option>1</option><option>2</option><option>3</option>
+      <option>4</option><option>5</option>
+    </select>
   </div>
+
+  <div>
+    <label>الجهة</label>
+    <select id="side">
+      <option value="">اختر</option>
+      <option>يمين</option>
+      <option>يسار</option>
+      <option>وسط</option>
+    </select>
+  </div>
+</div>
+
+<div class="row">
+  <div>
+    <label>المستوى</label>
+    <select id="level">
+      <option value="">اختر</option>
+      <option>علوي</option>
+      <option>متوسط</option>
+      <option>سفلي</option>
+    </select>
+  </div>
+
+  <div>
+    <label>منطقة / قسم</label>
+    <select id="zone">
+      <option value="">اختر</option>
+      <option>البيت</option>
+      <option>الملحق</option>
+      <option>المخزن</option>
+      <option>الكراج</option>
+    </select>
+  </div>
+</div>
+
+<label>ملاحظات</label>
+<textarea id="notes"></textarea>
+
+<label>صورة</label>
+<input id="image" type="file" accept="image/*">
+
+<button onclick="save()">💾 حفظ</button>
+</div>
+
+<div class="card">
+<h3>العرض</h3>
+<div id="list"></div>
+</div>
+
 </main>
 
 <script>
-/* ✅ تعريف كل العناصر (هذا هو الإصلاح الأساسي) */
-const nameInput  = document.getElementById("name");
-const categoryEl = document.getElementById("category");
-const shelfEl    = document.getElementById("shelf");
-const sideEl     = document.getElementById("side");
-const levelEl    = document.getElementById("level");
-const zoneEl     = document.getElementById("zone");
-const notesEl    = document.getElementById("notes");
-const imageEl    = document.getElementById("image");
-const editIndexEl= document.getElementById("editIndex");
-const searchEl   = document.getElementById("search");
-const listEl     = document.getElementById("list");
+const el=id=>document.getElementById(id);
+const nameEl=el("name"),catEl=el("category"),shelfEl=el("shelf"),
+sideEl=el("side"),levelEl=el("level"),zoneEl=el("zone"),
+notesEl=el("notes"),imageEl=el("image"),editIndexEl=el("editIndex"),
+listEl=el("list");
 
-/* ✅ تحميل البيانات من التخزين */
-let items = [];
-try{
-  items = JSON.parse(localStorage.getItem("warehouse_items") || "[]");
-  if(!Array.isArray(items)) items = [];
-}catch(e){
-  items = [];
-}
+let items=JSON.parse(localStorage.getItem("warehouse_items")||"[]");
 
-/* ✅ حفظ عنصر */
 function save(){
-  const name = nameInput.value.trim();
-  if(!name) return alert("اسم الغرض مطلوب");
-
-  const obj = {
-    name,
-    category: categoryEl.value,
-    shelf: shelfEl.value,
-    side: sideEl.value,
-    level: levelEl.value,
-    zone: zoneEl.value,
-    notes: notesEl.value,
-    date: new Date().toLocaleDateString("ar-SA"),
-    image: ""
+  if(!nameEl.value) return alert("اسم الغرض مطلوب");
+  const obj={
+    name:nameEl.value,
+    category:catEl.value,
+    shelf:shelfEl.value,
+    side:sideEl.value,
+    level:levelEl.value,
+    zone:zoneEl.value,
+    notes:notesEl.value,
+    image:"",
+    date:new Date().toLocaleString("ar-SA")
   };
 
-  const idx = editIndexEl.value;
-  const file = imageEl.files && imageEl.files[0];
+  const idx=editIndexEl.value;
+  const file=imageEl.files[0];
 
   if(file){
-    const reader = new FileReader();
-    reader.onload = e=>{
-      obj.image = e.target.result;
-      finalize(obj, idx);
-    };
-    reader.readAsDataURL(file);
-  }else{
-    finalize(obj, idx);
-  }
+    const r=new FileReader();
+    r.onload=e=>{obj.image=e.target.result;finish(obj,idx)};
+    r.readAsDataURL(file);
+  }else finish(obj,idx);
 }
 
-/* ✅ إنهاء الحفظ + كتابة localStorage */
-function finalize(obj, idx){
-  if(idx === ""){
-    items.push(obj);
-  }else{
-    items[Number(idx)] = obj;
-  }
+function finish(obj,idx){
+  if(idx==="") items.push(obj);
+  else items[idx]=obj;
 
-  try{
-    localStorage.setItem("warehouse_items", JSON.stringify(items));
-  }catch(e){
-    alert("⚠️ المتصفح منع التخزين. جرّب تعطيل وضع التصفح الخاص أو إعدادات الخصوصية.");
-    return;
-  }
-
-  clearForm();
-  render();
+  localStorage.setItem("warehouse_items",JSON.stringify(items));
+  clearForm(); render();
 }
 
 function render(){
-  const q = searchEl.value.trim();
-  listEl.innerHTML = "";
-
-  items
-    .filter(i => !q || (i.name && i.name.includes(q)) || (i.shelf && i.shelf.includes(q)))
-    .forEach((i, idx)=>{
-      const div = document.createElement("div");
-      div.className="item";
-      div.innerHTML = `
-        ${i.image ? `<img src="${i.image}">` : `<img src="https://via.placeholder.com/56">`}
-        <div>
-          <strong>${i.name || ""}</strong>
-          ${i.category ? `<span class="tag">${i.category}</span>`:""}
-          <div>رف ${i.shelf || ""} - ${i.side || ""} - ${i.level || ""}</div>
-        </div>
-        <div>
-          <button class="edit" onclick="edit(${idx})">تعديل</button>
-          <button class="danger" onclick="delItem(${idx})">حذف</button>
-        </div>
-      `;
-      listEl.appendChild(div);
-    });
+  listEl.innerHTML="";
+  items.forEach((i,idx)=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.innerHTML=`
+      <img src="${i.image||'https://via.placeholder.com/50'}">
+      <div>
+        <b>${i.name}</b><br>
+        رف ${i.shelf} - ${i.side} - ${i.level}<br>
+        ${i.category} / ${i.zone}
+      </div>
+      <button onclick="del(${idx})">🗑️</button>`;
+    listEl.appendChild(d);
+  });
 }
 
-function edit(i){
-  const o = items[i];
-  nameInput.value = o.name || "";
-  categoryEl.value = o.category || "";
-  shelfEl.value = o.shelf || "";
-  sideEl.value = o.side || "";
-  levelEl.value = o.level || "";
-  zoneEl.value = o.zone || "";
-  notesEl.value = o.notes || "";
-  editIndexEl.value = String(i);
-}
-
-function delItem(i){
-  if(confirm("حذف الغرض؟")){
+function del(i){
+  if(confirm("حذف؟")){
     items.splice(i,1);
-    localStorage.setItem("warehouse_items", JSON.stringify(items));
+    localStorage.setItem("warehouse_items",JSON.stringify(items));
     render();
   }
 }
 
 function clearForm(){
-  nameInput.value = "";
-  categoryEl.value = "";
-  shelfEl.value = "";
-  sideEl.value = "";
-  levelEl.value = "";
-  zoneEl.value = "";
-  notesEl.value = "";
-  imageEl.value = "";
-  editIndexEl.value = "";
-}
-
-function sync(){
-  try{
-    localStorage.setItem("warehouse_items", JSON.stringify(items));
-    alert("تمت المزامنة");
-  }catch(e){
-    alert("⚠️ المتصفح منع التخزين.");
-  }
+  [nameEl,catEl,shelfEl,sideEl,levelEl,zoneEl,notesEl,imageEl].forEach(e=>e.value="");
+  editIndexEl.value="";
 }
 
 render();

@@ -44,7 +44,7 @@
     .item img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--bd)}
     .tag{font-size:12px;background:#eef2ff;color:#1e40af;padding:2px 8px;border-radius:999px;margin-inline-start:6px}
     .danger{background:var(--bad);color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px}
-    .edit{background:var(--warn);color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px;margin-top:6px}
+    .edit{background:var(--warn);color:#fff;border:none;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:12px}
     .btncol{display:flex;flex-direction:column;gap:6px}
   </style>
 </head>
@@ -66,15 +66,7 @@
       <input id="name" placeholder="مثال: مفك كبير" />
 
       <label>التصنيف (اختياري)</label>
-      <select id="category">
-        <option value="">اختر</option>
-        <option>أدوات</option>
-        <option>كهرباء</option>
-        <option>مطبخ</option>
-        <option>ملابس</option>
-        <option>أدوية</option>
-        <option>أخرى</option>
-      </select>
+      <input id="category" placeholder="أدوات / كهرباء / مطبخ" />
 
       <div class="row">
         <div>
@@ -83,34 +75,18 @@
         </div>
         <div>
           <label>الجهة</label>
-          <select id="side">
-            <option value="">اختر</option>
-            <option>يمين</option>
-            <option>يسار</option>
-            <option>وسط</option>
-          </select>
+          <input id="side" placeholder="يمين / يسار" />
         </div>
       </div>
 
       <div class="row">
         <div>
           <label>المستوى</label>
-          <select id="level">
-            <option value="">اختر</option>
-            <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
-          </select>
+          <input id="level" placeholder="1 / 2 / 3" />
         </div>
         <div>
           <label>منطقة / قسم</label>
-          <select id="zone">
-            <option value="">اختر</option>
-            <option>المطبخ</option>
-            <option>الصالة</option>
-            <option>غرفة النوم</option>
-            <option>السطح</option>
-            <option>المخزن</option>
-            <option>أخرى</option>
-          </select>
+          <input id="zone" placeholder="المطبخ / المخزن..." />
         </div>
       </div>
 
@@ -128,7 +104,7 @@
 
       <div id="status" class="status"></div>
       <div style="font-size:12px;color:#6b7280;margin-top:8px">
-        ملاحظة: الحفظ يكون في Google Sheets، والصور تُرفع إلى Google Drive.
+        التخزين في Google Sheets + الصور في Google Drive (مشترك بين كل الأجهزة).
       </div>
     </div>
 
@@ -142,21 +118,12 @@
 </main>
 
 <script>
-const SCRIPT_URL = https://script.google.com/macros/s/AKfycbyOcMWz10VSb30Gc2kGlsvtJ0QO3V7GmuvFVEWLyX4oJk9Slzi8LxAyz8BrdFZFQ3R1/exec
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyOcMWz10VSb30Gc2kGlsvtJ0QO3V7GmuvFVEWLyX4oJk9Slzi8LxAyz8BrdFZFQ3R1/exec";
 
 let items = JSON.parse(localStorage.getItem("warehouse_items") || "[]");
 
 const $ = (id)=>document.getElementById(id);
 const statusBox = $("status");
-
-// تعبئة الأرفف 1..50
-(function fillShelves(){
-  const sel = $("shelf");
-  sel.innerHTML = `<option value="">اختر</option>`;
-  for(let i=1;i<=50;i++){
-    sel.innerHTML += `<option value="${i}">${i}</option>`;
-  }
-})();
 
 function setStatus(text, ok=true){
   statusBox.className = "status " + (ok ? "ok" : "err");
@@ -168,20 +135,70 @@ function clearStatus(){
   statusBox.textContent = "";
 }
 
-function toBase64(file){
-  return new Promise((resolve,reject)=>{
-    const r = new FileReader();
-    r.onload = e=>resolve(e.target.result);
-    r.onerror = reject;
-    r.readAsDataURL(file);
+// ✅ تعبئة الرفوف 1..50 (مضمون)
+document.addEventListener("DOMContentLoaded", () => {
+  const sel = document.getElementById("shelf");
+  sel.innerHTML = "";
+
+  const first = document.createElement("option");
+  first.value = "";
+  first.textContent = "اختر رقم الرف";
+  sel.appendChild(first);
+
+  for (let i = 1; i <= 50; i++) {
+    const opt = document.createElement("option");
+    opt.value = String(i);
+    opt.textContent = String(i);
+    sel.appendChild(opt);
+  }
+
+  render();
+});
+
+// ✅ ضغط الصورة للجوال (عشان ما تفشل)
+async function fileToCompressedDataURL(file){
+  const img = await new Promise((res, rej)=>{
+    const im = new Image();
+    im.onload = ()=>res(im);
+    im.onerror = rej;
+    im.src = URL.createObjectURL(file);
   });
+
+  const max = 1024; // حد مناسب للجوال
+  let w = img.width, h = img.height;
+  if (w > max || h > max) {
+    const r = Math.min(max / w, max / h);
+    w = Math.round(w * r);
+    h = Math.round(h * r);
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, w, h);
+
+  // JPEG جودة جيدة + حجم صغير
+  return canvas.toDataURL("image/jpeg", 0.75);
 }
 
 function clearForm(){
-  ["editId","name","notes"].forEach(id=>$(id).value="");
-  ["category","shelf","side","level","zone"].forEach(id=>$(id).value="");
+  ["editId","name","category","side","level","zone","notes"].forEach(id=>$(id).value="");
+  $("shelf").value = "";
   $("image").value = "";
   clearStatus();
+}
+
+async function apiPost(payload){
+  // إرسال بدون JSON Content-Type لتجنب preflight على الجوال
+  const body = new URLSearchParams();
+  body.set("data", JSON.stringify(payload));
+  const res = await fetch(SCRIPT_URL, { method:"POST", body });
+  return await res.json();
+}
+
+async function apiGet(){
+  const res = await fetch(SCRIPT_URL);
+  return await res.json();
 }
 
 async function save(){
@@ -202,40 +219,38 @@ async function save(){
     level: $("level").value,
     zone: $("zone").value,
     notes: $("notes").value,
-    image_data: "",
-    image_url: "" // سيأتي من السحابة
+    image_data: ""
   };
 
   const file = $("image").files[0];
   if(file){
-    item.image_data = await toBase64(file);
+    try{
+      item.image_data = await fileToCompressedDataURL(file);
+    }catch{
+      return setStatus("تعذر قراءة الصورة. جرّب صورة أخرى.", false);
+    }
   }
 
   try{
-    const res = await fetch(SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type":"application/json" },
-      body: JSON.stringify({ action:"save", item })
-    });
-    const j = await res.json();
+    const j = await apiPost({ action:"save", item });
     if(!j.ok) throw new Error(j.error || "Unknown");
 
-    // تحديث محلي
+    // حدّث محليًا (بدون تكرار)
     const saved = j.item;
+    items = items.filter(x=>x.id!==saved.id);
     items.unshift(saved);
     localStorage.setItem("warehouse_items", JSON.stringify(items));
 
     setStatus("✅ تم الحفظ في السحابة");
     clearForm();
     render();
-
   }catch(err){
-    setStatus("❌ لم يرسل للسحابة. تأكد من الإنترنت + نشر السكربت (Anyone).", false);
+    setStatus("❌ لم يرسل للسحابة. تأكد من نشر السكربت (Anyone) + الإنترنت.", false);
   }
 }
 
 function render(){
-  const q = $("search").value.trim();
+  const q = ($("search").value || "").trim();
   const list = $("list");
   list.innerHTML = "";
 
@@ -247,10 +262,10 @@ function render(){
       div.innerHTML = `
         ${i.image_url ? `<img src="${i.image_url}">` : `<img src="https://via.placeholder.com/56">`}
         <div>
-          <strong>${i.name}</strong>
+          <strong>${i.name || ""}</strong>
           ${i.category ? `<span class="tag">${i.category}</span>`:""}
-          <div>رف ${i.shelf} - ${i.side||""} - ${i.level||""}</div>
-          <div style="font-size:12px;color:#6b7280">${i.zone||""}</div>
+          <div>رف ${i.shelf || ""} - ${i.side || ""} - ${i.level || ""}</div>
+          ${i.zone ? `<div style="font-size:12px;color:#6b7280">${i.zone}</div>` : ""}
         </div>
         <div class="btncol">
           <button class="danger" onclick="delItem('${i.id}')">حذف</button>
@@ -279,19 +294,13 @@ async function delItem(id){
   if(!confirm("حذف الغرض؟")) return;
 
   try{
-    const res = await fetch(SCRIPT_URL, {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"delete", id })
-    });
-    const j = await res.json();
+    const j = await apiPost({ action:"delete", id });
     if(!j.ok) throw new Error(j.error || "Unknown");
 
     items = items.filter(x=>x.id!==id);
     localStorage.setItem("warehouse_items", JSON.stringify(items));
     setStatus("✅ تم الحذف");
     render();
-
   }catch(err){
     setStatus("❌ فشل الحذف من السحابة. تأكد من نشر السكربت.", false);
   }
@@ -300,8 +309,7 @@ async function delItem(id){
 async function loadCloud(){
   clearStatus();
   try{
-    const res = await fetch(SCRIPT_URL);
-    const j = await res.json();
+    const j = await apiGet();
     if(!j.ok) throw new Error(j.error || "Unknown");
 
     items = j.items || [];
@@ -309,11 +317,9 @@ async function loadCloud(){
     setStatus("✅ تم التحديث من السحابة");
     render();
   }catch(err){
-    setStatus("❌ لم استطع جلب البيانات من السحابة. تأكد من رابط السكربت /exec.", false);
+    setStatus("❌ لم استطع جلب البيانات من السحابة. تأكد من رابط /exec.", false);
   }
 }
-
-render();
 </script>
 
 </body>

@@ -6,329 +6,256 @@
 <title>📦 مستودع البيت</title>
 
 <style>
-:root{--b:#2563eb;--bg:#f6f7fb;--card:#fff;--bd:#e5e7eb;--txt:#111827;--r:14px}
-*{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:var(--bg);color:var(--txt)}
-header{background:var(--card);border-bottom:1px solid var(--bd);padding:14px;position:sticky;top:0;z-index:10}
-header h1{margin:0;font-size:20px;display:flex;gap:8px;align-items:center}
-main{padding:16px;max-width:1100px;margin:auto}
-.grid{display:grid;gap:16px}
-@media(min-width:900px){.grid{grid-template-columns:1fr 1.2fr}}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:14px}
-h2{margin:0 0 12px;font-size:16px}
-label{font-size:13px;color:#374151;margin-bottom:4px;display:block}
-input,select,textarea,button{width:100%;padding:10px;border-radius:10px;border:1px solid var(--bd);font-size:14px;font-family:inherit}
-textarea{resize:vertical}
-.row{display:grid;gap:10px}
-@media(min-width:600px){.row{grid-template-columns:1fr 1fr}}
-.actions{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr;margin-top:10px}
-.btn{cursor:pointer;border:none;color:#fff;font-weight:600}
-.save{background:var(--b)}
-.clear{background:#9ca3af}
-.reload{background:#111827}
+body{
+  margin:0;
+  font-family:Tahoma, Arial;
+  background:#f6f7fb;
+}
+header{
+  background:#fff;
+  padding:12px;
+  border-bottom:1px solid #ddd;
+}
+main{
+  max-width:1100px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:12px;
+  padding:14px;
+  margin-bottom:16px;
+}
+h2{margin-top:0}
+
+input, select, textarea, button{
+  width:100%;
+  padding:10px;
+  margin-bottom:8px;
+  border-radius:8px;
+  border:1px solid #ccc;
+}
+
+button{
+  cursor:pointer;
+  border:none;
+  font-weight:bold;
+}
+
+.save{background:#2563eb;color:#fff}
+.clear{background:#9ca3af;color:#fff}
+.reload{background:#111827;color:#fff}
 
 .item{
   display:grid;
-  grid-template-columns:auto 1fr auto;
+  grid-template-columns:1fr auto;
   gap:10px;
-  align-items:center;
   padding:10px;
-  border-radius:12px;
-  border:1px solid var(--bd);
-  margin-bottom:10px;
-  background:#fafafa;
+  border:1px solid #ddd;
+  border-radius:10px;
+  margin-bottom:8px;
 }
-.item img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--bd)}
-.actions2{display:flex;flex-direction:column;gap:6px}
-.editBtn{
-  background:#f59e0b;color:#fff;border:none;border-radius:8px;
-  padding:6px 8px;cursor:pointer;font-size:12px;line-height:1;
+
+.actions{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
-.delBtn{
-  background:#ef4444;color:#fff;border:none;border-radius:8px;
-  padding:6px 8px;cursor:pointer;font-size:12px;line-height:1;
+
+.edit{
+  background:#f59e0b;
+  color:#fff;
+  font-size:12px;
+  padding:6px;
+  border-radius:6px;
 }
-.tag{font-size:12px;background:#eef2ff;color:#1e40af;padding:2px 8px;border-radius:999px;margin-inline-start:6px}
-.small{font-size:12px;color:#6b7280;margin-top:4px}
+
+.delete{
+  background:#ef4444;
+  color:#fff;
+  font-size:12px;
+  padding:6px;
+  border-radius:6px;
+}
 </style>
 </head>
 
 <body>
-<header><h1>📦 مستودع البيت</h1></header>
+<header>
+<h1>📦 مستودع البيت</h1>
+</header>
 
 <main>
-  <div class="grid">
 
-    <div class="card">
-      <h2>إضافة / تعديل غرض</h2>
-      <input type="hidden" id="editIndex" />
+<div class="card">
+<h2>إضافة غرض</h2>
 
-      <label>اسم الغرض *</label>
-      <input id="name" placeholder="مثال: مفك كبير" />
+<input id="name" placeholder="اسم الغرض *">
+<input id="category" placeholder="التصنيف">
 
-      <label>التصنيف</label>
-      <select id="category">
-        <option value="">اختر</option>
-        <option>أدوات</option>
-        <option>كهرباء</option>
-        <option>مطبخ</option>
-        <option>سباكة</option>
-        <option>تنظيف</option>
-      </select>
+<select id="shelf"></select>
 
-      <div class="row">
-        <div>
-          <label>رقم الرف</label>
-          <select id="shelf"></select>
-        </div>
-        <div>
-          <label>الجهة</label>
-          <select id="side">
-            <option value="">اختر</option>
-            <option>يمين</option>
-            <option>يسار</option>
-            <option>وسط</option>
-          </select>
-        </div>
-      </div>
+<select id="side">
+  <option value="">الجهة</option>
+  <option>يمين</option>
+  <option>يسار</option>
+</select>
 
-      <div class="row">
-        <div>
-          <label>المستوى</label>
-          <select id="level">
-            <option value="">اختر</option>
-            <option>علوي</option>
-            <option>متوسط</option>
-            <option>سفلي</option>
-          </select>
-        </div>
-        <div>
-          <label>منطقة / قسم</label>
-          <select id="zone">
-            <option value="">اختر</option>
-            <option>البيت</option>
-            <option>الملحق</option>
-            <option>المخزن</option>
-            <option>الكراج</option>
-          </select>
-        </div>
-      </div>
+<select id="level">
+  <option value="">المستوى</option>
+  <option>علوي</option>
+  <option>وسط</option>
+  <option>سفلي</option>
+</select>
 
-      <label>ملاحظات</label>
-      <textarea id="notes" rows="3"></textarea>
+<textarea id="notes" placeholder="ملاحظات"></textarea>
 
-      <label>صورة (اختياري)</label>
-      <input id="image" type="file" accept="image/*" />
+<input id="image" type="file" accept="image/*">
 
-      <div class="actions">
-        <button class="btn reload" onclick="loadFromCloud()">تحديث من السحابة</button>
-        <button class="btn clear" onclick="clearForm()">مسح الحقول</button>
-        <button class="btn save" onclick="save()">حفظ</button>
-      </div>
-      <div class="small">ملاحظة: الصور تُرفع إلى Google Drive ويُحفظ رابطها في Google Sheets.</div>
-    </div>
+<button class="save" onclick="save()">💾 حفظ</button>
+<button class="reload" onclick="load()">🔄 تحديث من السحابة</button>
+<button class="clear" onclick="clearForm()">مسح</button>
+</div>
 
-    <div class="card">
-      <h2>البحث والعرض</h2>
-      <input id="search" placeholder="ابحث بالاسم أو الرف" oninput="render()" />
-      <div id="list"></div>
-    </div>
+<div class="card">
+<h2>العرض</h2>
+<div id="list"></div>
+</div>
 
-  </div>
 </main>
 
 <script>
-/* ضع رابط سكربتك هنا (أنت عندك صحيح، اتركه كما هو لو نفسه) */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyg8Z2xLXWVvrnHw4PdvlWrC0H1C3qsJe-EheRGazo0Ad3zuxm3QXHc0V2e3FgHYWbO/exec";
-
-const $ = (id)=>document.getElementById(id);
-const nameInput = $("name");
-const categoryEl = $("category");
-const shelfEl = $("shelf");
-const sideEl = $("side");
-const levelEl = $("level");
-const zoneEl = $("zone");
-const notesEl = $("notes");
-const imageEl = $("image");
-const editIndexEl = $("editIndex");
-const searchEl = $("search");
-const listEl = $("list");
-
-/* توليد 50 رف */
-shelfEl.innerHTML = `<option value="">اختر</option>`;
-for(let i=1;i<=50;i++){ shelfEl.innerHTML += `<option>${i}</option>`; }
+/* 🔴 ضع رابط السكربت هنا (اللي أرسلته آخر مرة) */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxr-KERLIww6mrFGgRuXBNfrmFTeDA_JNs_syEwXzT-c7nXzCREcTZYty6vSxZG4gOb/exec";
 
 let items = [];
+let editId = null;
 
-function uid_(){
-  return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,8);
+/* توليد الرفوف 1–50 */
+const shelfSel = document.getElementById("shelf");
+shelfSel.innerHTML = '<option value="">رقم الرف</option>';
+for(let i=1;i<=50;i++){
+  shelfSel.innerHTML += `<option>${i}</option>`;
 }
 
-async function apiGet_(){
+/* 🟢 GET */
+async function load(){
   const res = await fetch(SCRIPT_URL);
-  return await res.json();
+  const data = await res.json();
+  items = data.items || [];
+  render();
 }
 
-async function apiPost_(payload){
+/* 🟢 POST (حل مشكلة iPhone / Safari) */
+async function apiPost(payload){
+  const body = new URLSearchParams();
+  body.set("payload", JSON.stringify(payload));
+
   const res = await fetch(SCRIPT_URL, {
     method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify(payload)
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+    },
+    body
   });
   return await res.json();
 }
 
-/* ضغط الصورة قبل الإرسال (لجعلها خفيفة وسريعة) */
-function fileToDataUrlCompressed(file, maxW=1200, quality=0.75){
-  return new Promise((resolve, reject)=>{
+/* ضغط الصورة */
+function compressImage(file){
+  return new Promise(resolve=>{
     const img = new Image();
     const reader = new FileReader();
     reader.onload = e=>{
       img.onload = ()=>{
-        const ratio = img.width / img.height;
-        let w = img.width;
-        let h = img.height;
-        if (w > maxW) { w = maxW; h = Math.round(maxW / ratio); }
-
         const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, w, h);
-
-        const dataUrl = canvas.toDataURL("image/jpeg", quality);
-        resolve(dataUrl);
+        const max = 1000;
+        let w = img.width, h = img.height;
+        if(w > max){ h *= max/w; w = max; }
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL("image/jpeg",0.7));
       };
-      img.onerror = reject;
       img.src = e.target.result;
     };
-    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
-async function loadFromCloud(){
-  try{
-    const data = await apiGet_();
-    if(!data.ok) throw new Error("Cloud not ok");
-    items = data.items || [];
-    render();
-  }catch(e){
-    alert("⚠️ لم أستطع تحميل السحابة. تأكد من الإنترنت.");
-  }
-}
-
 async function save(){
-  const name = nameInput.value.trim();
-  if(!name) return alert("اسم الغرض مطلوب");
-
-  const idx = editIndexEl.value;
-  const existingId = (idx !== "" && items[Number(idx)] && items[Number(idx)].id) ? items[Number(idx)].id : null;
+  if(!name.value.trim()){
+    alert("اسم الغرض مطلوب");
+    return;
+  }
 
   const obj = {
-    id: existingId || uid_(),
-    name,
-    category: categoryEl.value,
-    shelf: shelfEl.value,
-    side: sideEl.value,
-    level: levelEl.value,
-    zone: zoneEl.value,
-    notes: notesEl.value,
-    date: new Date().toLocaleString("ar-SA"),
-    image_url: "" // سيتم تحديثه من السكربت إذا رفعت صورة
+    id: editId || Date.now().toString(),
+    name: name.value,
+    category: category.value,
+    shelf: shelf.value,
+    side: side.value,
+    level: level.value,
+    notes: notes.value
   };
 
-  const file = imageEl.files && imageEl.files[0];
-
   try{
-    if(file){
-      const dataUrl = await fileToDataUrlCompressed(file);
-      const payload = { action:"upsert", item: { ...obj, image_base64: dataUrl } };
-      const res = await apiPost_(payload);
-      if(!res.ok) throw new Error(res.error || "Upload failed");
-    }else{
-      const res = await apiPost_({ action:"upsert", item: obj });
-      if(!res.ok) throw new Error(res.error || "Save failed");
+    if(image.files[0]){
+      obj.image_base64 = await compressImage(image.files[0]);
     }
-
+    await apiPost({ action:"upsert", item:obj });
     clearForm();
-    await loadFromCloud(); // حتى تظهر على طول بعد التحديث
+    load();
   }catch(e){
-    alert("⚠️ لم يرسل للسحابة. تأكد من الإنترنت أو إعدادات السكربت.");
+    alert("⚠️ لم يرسل للسحابة");
   }
 }
 
 function render(){
-  const q = searchEl.value.trim();
-  listEl.innerHTML = "";
-
-  (items || [])
-    .filter(i => !q || (i.name && i.name.includes(q)) || (i.shelf && String(i.shelf).includes(q)))
-    .forEach((i, idx)=>{
-      const div = document.createElement("div");
-      div.className="item";
-
-      const imgHtml = i.image_url
-        ? `<img src="${i.image_url}">`
-        : `<img src="https://via.placeholder.com/56">`;
-
-      div.innerHTML = `
-        ${imgHtml}
-        <div>
-          <strong>${i.name || ""}</strong>
-          ${i.category ? `<span class="tag">${i.category}</span>`:""}
-          <div>رف ${i.shelf || ""} - ${i.side || ""} - ${i.level || ""}</div>
-          ${i.image_url ? `<div class="small">📷 الصورة محفوظة في Drive</div>` : `<div class="small">بدون صورة</div>`}
-        </div>
-        <div class="actions2">
-          <button class="editBtn" onclick="edit(${idx})">تعديل</button>
-          <button class="delBtn" onclick="delItem(${idx})">حذف</button>
-        </div>
-      `;
-      listEl.appendChild(div);
-    });
+  list.innerHTML="";
+  items.forEach(i=>{
+    const d=document.createElement("div");
+    d.className="item";
+    d.innerHTML=`
+      <div>
+        <b>${i.name}</b><br>
+        رف ${i.shelf || "-"} / ${i.side || "-"} / ${i.level || "-"}
+      </div>
+      <div class="actions">
+        <button class="edit" onclick="edit('${i.id}')">تعديل</button>
+        <button class="delete" onclick="del('${i.id}')">حذف</button>
+      </div>
+    `;
+    list.appendChild(d);
+  });
 }
 
-function edit(i){
-  const o = items[i];
-  nameInput.value = o.name || "";
-  categoryEl.value = o.category || "";
-  shelfEl.value = o.shelf || "";
-  sideEl.value = o.side || "";
-  levelEl.value = o.level || "";
-  zoneEl.value = o.zone || "";
-  notesEl.value = o.notes || "";
-  editIndexEl.value = String(i);
+function edit(id){
+  const o = items.find(x=>x.id==id);
+  if(!o) return;
+  editId=id;
+  name.value=o.name;
+  category.value=o.category;
+  shelf.value=o.shelf;
+  side.value=o.side;
+  level.value=o.level;
+  notes.value=o.notes;
 }
 
-async function delItem(i){
-  const id = items[i]?.id;
-  if(!id) return;
-
-  if(confirm("حذف الغرض؟")){
-    try{
-      const res = await apiPost_({ action:"delete", item:{ id } });
-      if(!res.ok) throw new Error(res.error || "Delete failed");
-      await loadFromCloud();
-    }catch(e){
-      alert("⚠️ لم يتم الحذف من السحابة.");
-    }
-  }
+async function del(id){
+  if(!confirm("حذف الغرض؟")) return;
+  await apiPost({ action:"delete", item:{id} });
+  load();
 }
 
 function clearForm(){
-  nameInput.value = "";
-  categoryEl.value = "";
-  shelfEl.value = "";
-  sideEl.value = "";
-  levelEl.value = "";
-  zoneEl.value = "";
-  notesEl.value = "";
-  imageEl.value = "";
-  editIndexEl.value = "";
+  document.querySelectorAll("input,select,textarea").forEach(e=>e.value="");
+  editId=null;
 }
 
-loadFromCloud();
+load();
 </script>
-
 </body>
 </html>

@@ -6,255 +6,248 @@
 <title>📦 مستودع البيت</title>
 
 <style>
-body{
-  margin:0;
-  font-family:Tahoma, Arial;
-  background:#f6f7fb;
-}
-header{
-  background:#fff;
-  padding:12px;
-  border-bottom:1px solid #ddd;
-}
-main{
-  max-width:1100px;
-  margin:auto;
-  padding:16px;
-}
-.card{
-  background:#fff;
-  border:1px solid #ddd;
-  border-radius:12px;
-  padding:14px;
-  margin-bottom:16px;
-}
-h2{margin-top:0}
-
-input, select, textarea, button{
-  width:100%;
-  padding:10px;
-  margin-bottom:8px;
-  border-radius:8px;
-  border:1px solid #ccc;
-}
-
-button{
-  cursor:pointer;
-  border:none;
-  font-weight:bold;
-}
-
+body{margin:0;font-family:Tahoma,Arial;background:#f6f7fb}
+header{background:#fff;padding:12px;border-bottom:1px solid #ddd}
+main{max-width:1100px;margin:auto;padding:16px}
+.card{background:#fff;border:1px solid #ddd;border-radius:12px;padding:14px;margin-bottom:16px}
+h2{margin:0 0 10px}
+input,select,textarea,button{width:100%;padding:10px;margin-bottom:8px;border-radius:8px;border:1px solid #ccc}
+button{cursor:pointer;border:none;font-weight:bold}
 .save{background:#2563eb;color:#fff}
 .clear{background:#9ca3af;color:#fff}
 .reload{background:#111827;color:#fff}
+.msg{padding:10px;border-radius:10px;margin-top:8px;display:none}
+.ok{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.err{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
 
-.item{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:10px;
-  padding:10px;
-  border:1px solid #ddd;
-  border-radius:10px;
-  margin-bottom:8px;
-}
-
-.actions{
-  display:flex;
-  flex-direction:column;
-  gap:6px;
-}
-
-.edit{
-  background:#f59e0b;
-  color:#fff;
-  font-size:12px;
-  padding:6px;
-  border-radius:6px;
-}
-
-.delete{
-  background:#ef4444;
-  color:#fff;
-  font-size:12px;
-  padding:6px;
-  border-radius:6px;
-}
+.item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:10px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px;background:#fafafa}
+.actions{display:flex;flex-direction:column;gap:6px}
+.edit{background:#f59e0b;color:#fff;font-size:12px;padding:6px;border-radius:6px}
+.delete{background:#ef4444;color:#fff;font-size:12px;padding:6px;border-radius:6px}
+.small{font-size:12px;color:#6b7280}
 </style>
 </head>
 
 <body>
-<header>
-<h1>📦 مستودع البيت</h1>
-</header>
+<header><h1>📦 مستودع البيت</h1></header>
 
 <main>
+  <div class="card">
+    <h2>إضافة / تعديل</h2>
 
-<div class="card">
-<h2>إضافة غرض</h2>
+    <input id="name" placeholder="اسم الغرض *">
+    <input id="category" placeholder="التصنيف">
 
-<input id="name" placeholder="اسم الغرض *">
-<input id="category" placeholder="التصنيف">
+    <select id="shelf"></select>
 
-<select id="shelf"></select>
+    <select id="side">
+      <option value="">الجهة</option>
+      <option>يمين</option>
+      <option>يسار</option>
+      <option>وسط</option>
+    </select>
 
-<select id="side">
-  <option value="">الجهة</option>
-  <option>يمين</option>
-  <option>يسار</option>
-</select>
+    <select id="level">
+      <option value="">المستوى</option>
+      <option>علوي</option>
+      <option>وسط</option>
+      <option>سفلي</option>
+    </select>
 
-<select id="level">
-  <option value="">المستوى</option>
-  <option>علوي</option>
-  <option>وسط</option>
-  <option>سفلي</option>
-</select>
+    <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-<textarea id="notes" placeholder="ملاحظات"></textarea>
+    <label class="small">صورة (اختياري)</label>
+    <input id="image" type="file" accept="image/*">
 
-<input id="image" type="file" accept="image/*">
+    <button class="save" id="saveBtn">💾 حفظ</button>
+    <button class="reload" id="reloadBtn">🔄 تحديث من السحابة</button>
+    <button class="clear" id="clearBtn">مسح</button>
 
-<button class="save" onclick="save()">💾 حفظ</button>
-<button class="reload" onclick="load()">🔄 تحديث من السحابة</button>
-<button class="clear" onclick="clearForm()">مسح</button>
-</div>
+    <div id="msgOk" class="msg ok"></div>
+    <div id="msgErr" class="msg err"></div>
+  </div>
 
-<div class="card">
-<h2>العرض</h2>
-<div id="list"></div>
-</div>
-
+  <div class="card">
+    <h2>العرض</h2>
+    <div id="list"></div>
+  </div>
 </main>
 
 <script>
-/* 🔴 ضع رابط السكربت هنا (اللي أرسلته آخر مرة) */
+/* ✅ ضع رابط السكربت هنا */
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxr-KERLIww6mrFGgRuXBNfrmFTeDA_JNs_syEwXzT-c7nXzCREcTZYty6vSxZG4gOb/exec";
+
+const elName = document.getElementById("name");
+const elCategory = document.getElementById("category");
+const elShelf = document.getElementById("shelf");
+const elSide = document.getElementById("side");
+const elLevel = document.getElementById("level");
+const elNotes = document.getElementById("notes");
+const elImage = document.getElementById("image");
+const elList = document.getElementById("list");
+const msgOk = document.getElementById("msgOk");
+const msgErr = document.getElementById("msgErr");
+
+const btnSave = document.getElementById("saveBtn");
+const btnReload = document.getElementById("reloadBtn");
+const btnClear = document.getElementById("clearBtn");
 
 let items = [];
 let editId = null;
 
-/* توليد الرفوف 1–50 */
-const shelfSel = document.getElementById("shelf");
-shelfSel.innerHTML = '<option value="">رقم الرف</option>';
-for(let i=1;i<=50;i++){
-  shelfSel.innerHTML += `<option>${i}</option>`;
-}
+/* رفوف 1–50 */
+elShelf.innerHTML = '<option value="">رقم الرف</option>';
+for(let i=1;i<=50;i++){ elShelf.innerHTML += `<option value="${i}">${i}</option>`; }
 
-/* 🟢 GET */
+function showOk(t){ msgOk.style.display="block"; msgErr.style.display="none"; msgOk.textContent=t; }
+function showErr(t){ msgErr.style.display="block"; msgOk.style.display="none"; msgErr.textContent=t; }
+
 async function load(){
-  const res = await fetch(SCRIPT_URL);
-  const data = await res.json();
-  items = data.items || [];
-  render();
+  try{
+    const res = await fetch(SCRIPT_URL, { method:"GET" });
+    const data = await res.json();
+    items = data.items || [];
+    render();
+    showOk("✅ تم التحميل من السحابة");
+  }catch(e){
+    showErr("⚠️ فشل التحميل من السحابة (تأكد من الرابط/الإنترنت)");
+    console.error(e);
+  }
 }
 
-/* 🟢 POST (حل مشكلة iPhone / Safari) */
+/* ✅ POST بطريقة مناسبة للآيفون */
 async function apiPost(payload){
   const body = new URLSearchParams();
   body.set("payload", JSON.stringify(payload));
 
   const res = await fetch(SCRIPT_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-    },
+    headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
     body
   });
   return await res.json();
 }
 
-/* ضغط الصورة */
+/* ضغط الصورة لتكون خفيفة */
 function compressImage(file){
-  return new Promise(resolve=>{
+  return new Promise((resolve,reject)=>{
     const img = new Image();
     const reader = new FileReader();
     reader.onload = e=>{
       img.onload = ()=>{
-        const canvas = document.createElement("canvas");
         const max = 1000;
         let w = img.width, h = img.height;
-        if(w > max){ h *= max/w; w = max; }
-        canvas.width = w;
-        canvas.height = h;
-        canvas.getContext("2d").drawImage(img,0,0,w,h);
-        resolve(canvas.toDataURL("image/jpeg",0.7));
+        if(w > max){ h = Math.round(h * (max / w)); w = max; }
+        const c = document.createElement("canvas");
+        c.width = w; c.height = h;
+        c.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(c.toDataURL("image/jpeg", 0.7));
       };
+      img.onerror = reject;
       img.src = e.target.result;
     };
+    reader.onerror = reject;
     reader.readAsDataURL(file);
   });
 }
 
+function clearForm(){
+  elName.value = "";
+  elCategory.value = "";
+  elShelf.value = "";
+  elSide.value = "";
+  elLevel.value = "";
+  elNotes.value = "";
+  elImage.value = "";
+  editId = null;
+}
+
 async function save(){
-  if(!name.value.trim()){
-    alert("اسم الغرض مطلوب");
-    return;
-  }
+  const name = elName.value.trim();
+  if(!name){ showErr("اسم الغرض مطلوب"); return; }
 
   const obj = {
-    id: editId || Date.now().toString(),
-    name: name.value,
-    category: category.value,
-    shelf: shelf.value,
-    side: side.value,
-    level: level.value,
-    notes: notes.value
+    id: editId || ("id-" + Date.now()),
+    name,
+    category: elCategory.value || "",
+    shelf: elShelf.value || "",
+    side: elSide.value || "",
+    level: elLevel.value || "",
+    notes: elNotes.value || ""
   };
 
   try{
-    if(image.files[0]){
-      obj.image_base64 = await compressImage(image.files[0]);
+    btnSave.disabled = true;
+    btnSave.textContent = "جاري الحفظ...";
+
+    if(elImage.files && elImage.files[0]){
+      obj.image_base64 = await compressImage(elImage.files[0]);
     }
-    await apiPost({ action:"upsert", item:obj });
+
+    const res = await apiPost({ action:"upsert", item: obj });
+    if(!res || res.ok !== true){
+      throw new Error(res?.error || "Cloud response not ok");
+    }
+
+    showOk("✅ تم الحفظ في السحابة");
     clearForm();
-    load();
+    await load();
   }catch(e){
-    alert("⚠️ لم يرسل للسحابة");
+    showErr("⚠️ لم يرسل للسحابة (تأكد من نشر السكربت Anyone + الإنترنت)");
+    console.error(e);
+  }finally{
+    btnSave.disabled = false;
+    btnSave.textContent = "💾 حفظ";
   }
 }
 
 function render(){
-  list.innerHTML="";
+  elList.innerHTML = "";
   items.forEach(i=>{
-    const d=document.createElement("div");
+    const d = document.createElement("div");
     d.className="item";
-    d.innerHTML=`
+    d.innerHTML = `
       <div>
-        <b>${i.name}</b><br>
-        رف ${i.shelf || "-"} / ${i.side || "-"} / ${i.level || "-"}
+        <b>${i.name || ""}</b><br>
+        <span class="small">رف ${i.shelf || "-"} / ${i.side || "-"} / ${i.level || "-"}</span>
       </div>
       <div class="actions">
-        <button class="edit" onclick="edit('${i.id}')">تعديل</button>
-        <button class="delete" onclick="del('${i.id}')">حذف</button>
+        <button class="edit">تعديل</button>
+        <button class="delete">حذف</button>
       </div>
     `;
-    list.appendChild(d);
+    d.querySelector(".edit").onclick = ()=> {
+      editId = i.id;
+      elName.value = i.name || "";
+      elCategory.value = i.category || "";
+      elShelf.value = i.shelf || "";
+      elSide.value = i.side || "";
+      elLevel.value = i.level || "";
+      elNotes.value = i.notes || "";
+      showOk("✏️ وضع التعديل");
+    };
+    d.querySelector(".delete").onclick = async ()=> {
+      if(!confirm("حذف الغرض؟")) return;
+      try{
+        const res = await apiPost({ action:"delete", item:{ id: i.id } });
+        if(!res || res.ok !== true) throw new Error(res?.error || "Delete failed");
+        showOk("🗑️ تم الحذف");
+        await load();
+      }catch(e){
+        showErr("⚠️ لم يتم الحذف من السحابة");
+        console.error(e);
+      }
+    };
+    elList.appendChild(d);
   });
 }
 
-function edit(id){
-  const o = items.find(x=>x.id==id);
-  if(!o) return;
-  editId=id;
-  name.value=o.name;
-  category.value=o.category;
-  shelf.value=o.shelf;
-  side.value=o.side;
-  level.value=o.level;
-  notes.value=o.notes;
-}
+/* أزرار */
+btnSave.addEventListener("click", save);
+btnReload.addEventListener("click", load);
+btnClear.addEventListener("click", clearForm);
 
-async function del(id){
-  if(!confirm("حذف الغرض؟")) return;
-  await apiPost({ action:"delete", item:{id} });
-  load();
-}
-
-function clearForm(){
-  document.querySelectorAll("input,select,textarea").forEach(e=>e.value="");
-  editId=null;
-}
-
+/* تشغيل */
 load();
 </script>
 </body>

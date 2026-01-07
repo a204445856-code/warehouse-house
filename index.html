@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>📦 مستودع البيت</title>
+
   <style>
     :root{
       --b:#2563eb; --bg:#f6f7fb; --card:#fff; --ok:#10b981; --err:#ef4444;
@@ -32,7 +33,7 @@
     @media(min-width:600px){.row{grid-template-columns:1fr 1fr}}
 
     .actions{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr;margin-top:10px}
-    .btn{cursor:pointer;border:none;color:#fff;font-weight:700}
+    .btn{cursor:pointer;border:none;color:#fff;font-weight:700;border-radius:10px;padding:10px}
     .save{background:var(--b)} .clear{background:#9ca3af} .sync{background:#111827}
 
     .status{margin-top:10px;padding:10px;border-radius:12px;border:1px solid var(--bd);font-size:13px}
@@ -63,7 +64,6 @@
 <main>
   <div class="grid">
 
-    <!-- إضافة / تعديل -->
     <div class="card">
       <h2>إضافة / تعديل غرض</h2>
 
@@ -117,7 +117,6 @@
       <div class="muted">التخزين يتم في Google Sheets + الصور في Google Drive (تظهر على كل الأجهزة).</div>
     </div>
 
-    <!-- العرض -->
     <div class="card">
       <h2>البحث والعرض</h2>
       <input id="search" placeholder="ابحث بالاسم أو رقم الرف" oninput="render()" />
@@ -128,8 +127,9 @@
 </main>
 
 <script>
-/** ضع رابط الويب آب هنا (exec) */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz-ell-BknFfiu2K5EGmhPYlILAT-W_5labDcslq2EnTfqpw_hzpfKmeJSxsEqs_V-v/exec";
+/** ✅ ضع رابطك الأخير هنا */
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKX1Dj8Exa-sh5YFtUiojb4G13T8ONEFSX3mTANIegkvJkH7q4_XSUyFac4JDMIVyK/exec";
+
 /** Local cache */
 let items = JSON.parse(localStorage.getItem("warehouse_items_v2") || "[]");
 
@@ -146,7 +146,8 @@ function setStatus(text, ok=true){
 /** Populate shelves 1..50 */
 (function initShelves(){
   const sel = $("shelf");
-  sel.innerHTML = `<option value="">اختر</option>` + Array.from({length:50},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
+  sel.innerHTML = `<option value="">اختر</option>` +
+    Array.from({length:50},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
 })();
 
 function normalizeItem(x){
@@ -188,17 +189,16 @@ async function readFileAsDataURL(file){
 async function apiGet(){
   const res = await fetch(SCRIPT_URL, { cache: "no-store" });
   const txt = await res.text();
-  // لو رجع HTML بدل JSON -> هذا سبب Unexpected token <
-  if (txt.trim().startsWith("<")) throw new Error("السكربت يرجّع صفحة HTML (صلاحيات/نشر). تأكد أنه Web app و Any person.");
+  if (txt.trim().startsWith("<")) throw new Error("السكربت يرجّع HTML (صلاحيات/نشر). تأكد Web app و Any person.");
   return JSON.parse(txt);
 }
 
+/** ✅ أهم جزء لحل Failed to fetch: POST على شكل data= */
 async function apiPost(payload){
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify(payload)
-  });
+  const body = new URLSearchParams();
+  body.append("data", JSON.stringify(payload));
+
+  const res = await fetch(SCRIPT_URL, { method: "POST", body });
   const txt = await res.text();
   if (txt.trim().startsWith("<")) throw new Error("السكربت رجّع HTML (صلاحيات/نشر).");
   return JSON.parse(txt);
@@ -213,11 +213,9 @@ async function save(){
 
   const id = $("editId").value || crypto.randomUUID();
 
-  // تجهيز صورة (اختياري) - نرسل Base64 للسكربت
   let imageData = "";
   const file = $("image").files[0];
   if(file){
-    // تنبيه: الصور الكبيرة جدًا قد تفشل. لو واجهت ذلك نقوم بضغطها لاحقًا.
     imageData = await readFileAsDataURL(file);
   }
 
@@ -232,7 +230,7 @@ async function save(){
     notes: $("notes").value
   });
 
-  // حفظ محلي فورًا (عشان ما يختفي عند التحديث)
+  // حفظ محلي فورًا
   const idx = items.findIndex(x=>x.id===id);
   if(idx === -1) items.push(item); else items[idx] = item;
   persistLocal();
@@ -243,7 +241,7 @@ async function save(){
     if(!res.ok) throw new Error(res.error || "فشل الحفظ");
     setStatus("✅ تم الحفظ على السحابة", true);
     clearForm();
-    await loadFromCloud(); // لتحديث رابط الصورة image_url
+    await loadFromCloud();
   }catch(err){
     setStatus("⚠️ لم يُرسل للسحابة: " + err.message, false);
   }
@@ -255,7 +253,7 @@ async function loadFromCloud(){
     if(!res.ok) throw new Error(res.error || "فشل الجلب");
     const cloud = (res.items || []).map(normalizeItem);
 
-    // دمج: السحابة هي المصدر الأساسي، لكن نحافظ على المحلي لو فيه عناصر غير مرفوعة
+    // دمج: السحابة + المحلي (لو فيه عناصر غير مرفوعة)
     const byId = new Map();
     cloud.forEach(i=>byId.set(i.id, i));
     items.forEach(i=>{ if(!byId.has(i.id)) byId.set(i.id, i); });
@@ -308,7 +306,7 @@ function render(){
 
   const filtered = items
     .filter(i => !q || i.name.includes(q) || String(i.shelf).includes(q))
-    .sort((a,b)=> String(a.shelf).localeCompare(String(b.shelf), "ar") );
+    .sort((a,b)=> Number(a.shelf||0) - Number(b.shelf||0));
 
   filtered.forEach(i=>{
     const div = document.createElement("div");
@@ -336,7 +334,6 @@ function escapeHtml(s){
   }[m]));
 }
 
-// تحميل أولي: من المحلي ثم محاولة من السحابة
 render();
 loadFromCloud();
 </script>

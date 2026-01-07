@@ -1,70 +1,346 @@
-const SHEET_NAME = "items";
-const FOLDER_NAME = "WarehouseImages";
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>📦 مستودع البيت</title>
 
-function doGet() {
-  return json({ ok:true, items:getItems() });
+  <style>
+    :root{
+      --b:#2563eb; --bg:#f6f7fb; --card:#fff; --ok:#10b981; --err:#ef4444;
+      --bd:#e5e7eb; --txt:#111827; --r:14px; --shadow:0 10px 25px rgba(0,0,0,.08);
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;background:var(--bg);color:var(--txt)}
+    header{background:var(--card);border-bottom:1px solid var(--bd);padding:14px;position:sticky;top:0;z-index:10}
+    header h1{margin:0;font-size:20px;display:flex;gap:8px;align-items:center}
+
+    main{padding:16px;max-width:1100px;margin:auto}
+    .grid{display:grid;gap:16px}
+    @media(min-width:900px){.grid{grid-template-columns:1fr 1.2fr}}
+
+    .card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);box-shadow:var(--shadow);padding:14px}
+    h2{margin:0 0 12px;font-size:16px}
+
+    label{font-size:13px;color:#374151;margin-bottom:4px;display:block}
+    input,select,textarea,button{
+      width:100%;padding:10px;border-radius:10px;border:1px solid var(--bd);
+      font-size:14px;font-family:inherit
+    }
+    textarea{resize:vertical}
+
+    .row{display:grid;gap:10px}
+    @media(min-width:600px){.row{grid-template-columns:1fr 1fr}}
+
+    .actions{display:grid;gap:10px;grid-template-columns:1fr 1fr 1fr;margin-top:10px}
+    .btn{cursor:pointer;border:none;color:#fff;font-weight:700}
+    .save{background:var(--b)} .clear{background:#9ca3af} .sync{background:#111827}
+
+    .status{margin-top:10px;padding:10px;border-radius:12px;border:1px solid var(--bd);font-size:13px}
+    .status.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+    .status.err{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+
+    .item{
+      display:grid;gap:10px;
+      grid-template-columns:auto 1fr auto;
+      align-items:center;padding:10px;border-radius:12px;border:1px solid var(--bd);
+      margin-bottom:10px;background:#fafafa;
+    }
+    .item img{width:56px;height:56px;object-fit:cover;border-radius:10px;border:1px solid var(--bd);background:#fff}
+    .tag{font-size:12px;background:#eef2ff;color:#1e40af;padding:2px 8px;border-radius:999px;margin-inline-start:6px}
+
+    .btnMini{border:none;border-radius:8px;padding:6px 10px;cursor:pointer;color:#fff;font-weight:700;font-size:12px;width:72px}
+    .delBtn{background:#ef4444}
+    .editBtn{background:#f59e0b}
+    .miniStack{display:flex;flex-direction:column;gap:6px;align-items:stretch}
+
+    .muted{font-size:12px;color:#6b7280;margin-top:6px}
+  </style>
+</head>
+
+<body>
+<header><h1>📦 مستودع البيت</h1></header>
+
+<main>
+  <div class="grid">
+
+    <!-- إضافة / تعديل -->
+    <div class="card">
+      <h2>إضافة / تعديل غرض</h2>
+
+      <input type="hidden" id="editId" />
+
+      <label>اسم الغرض *</label>
+      <input id="name" placeholder="مثال: مفك كبير" />
+
+      <label>التصنيف (اختياري)</label>
+      <input id="category" placeholder="أدوات / كهرباء / مطبخ" />
+
+      <div class="row">
+        <div>
+          <label>رقم الرف *</label>
+          <select id="shelf"></select>
+        </div>
+        <div>
+          <label>الجهة</label>
+          <select id="side">
+            <option value="">اختر</option>
+            <option value="يمين">يمين</option>
+            <option value="يسار">يسار</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>المستوى</label>
+          <input id="level" placeholder="مثال: 1 / 2 / 3" />
+        </div>
+        <div>
+          <label>منطقة / قسم</label>
+          <input id="zone" placeholder="المطبخ / المخزن..." />
+        </div>
+      </div>
+
+      <label>ملاحظات</label>
+      <textarea id="notes" rows="3"></textarea>
+
+      <label>صورة (اختياري)</label>
+      <input id="image" type="file" accept="image/*" capture="environment" />
+
+      <div class="actions">
+        <button class="btn sync" onclick="loadFromCloud()">تحديث من السحابة</button>
+        <button class="btn clear" onclick="clearForm()">مسح الحقول</button>
+        <button class="btn save" onclick="save()">حفظ</button>
+      </div>
+
+      <div id="status" class="status" style="display:none"></div>
+      <div class="muted">التخزين يتم في Google Sheets + الصور في Google Drive (تظهر على كل الأجهزة).</div>
+    </div>
+
+    <!-- العرض -->
+    <div class="card">
+      <h2>البحث والعرض</h2>
+      <input id="search" placeholder="ابحث بالاسم أو رقم الرف" oninput="render()" />
+      <div id="list"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+/** ضع رابط الويب آب هنا (exec) */
+const SCRIPT_URL = "ضع_رابطك_هنا";
+
+/** Local cache */
+let items = JSON.parse(localStorage.getItem("warehouse_items_v2") || "[]");
+
+/** Elements */
+const $ = (id)=>document.getElementById(id);
+const statusBox = $("status");
+
+function setStatus(text, ok=true){
+  statusBox.style.display = "block";
+  statusBox.className = "status " + (ok ? "ok" : "err");
+  statusBox.textContent = text;
 }
 
-function doPost(e) {
-  const data = JSON.parse(e.postData.contents || "{}");
+/** Populate shelves 1..50 */
+(function initShelves(){
+  const sel = $("shelf");
+  sel.innerHTML = `<option value="">اختر</option>` + Array.from({length:50},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join("");
+})();
 
-  if(data.action === "save"){
-    saveItem(data.item);
-    return json({ ok:true });
+function normalizeItem(x){
+  return {
+    id: x.id || crypto.randomUUID(),
+    name: (x.name||"").trim(),
+    category: x.category||"",
+    shelf: String(x.shelf||""),
+    side: x.side||"",
+    level: x.level||"",
+    zone: x.zone||"",
+    notes: x.notes||"",
+    date: x.date || new Date().toISOString(),
+    image_url: x.image_url || ""
+  };
+}
+
+function persistLocal(){
+  localStorage.setItem("warehouse_items_v2", JSON.stringify(items));
+}
+
+function clearForm(){
+  ["editId","name","category","level","zone","notes"].forEach(id => $(id).value = "");
+  $("shelf").value = "";
+  $("side").value = "";
+  $("image").value = "";
+}
+
+async function readFileAsDataURL(file){
+  return new Promise((resolve,reject)=>{
+    const r = new FileReader();
+    r.onload = ()=>resolve(r.result);
+    r.onerror = reject;
+    r.readAsDataURL(file);
+  });
+}
+
+/** Cloud helpers */
+async function apiGet(){
+  const res = await fetch(SCRIPT_URL, { cache: "no-store" });
+  const txt = await res.text();
+  // لو رجع HTML بدل JSON -> هذا سبب Unexpected token <
+  if (txt.trim().startsWith("<")) throw new Error("السكربت يرجّع صفحة HTML (صلاحيات/نشر). تأكد أنه Web app و Any person.");
+  return JSON.parse(txt);
+}
+
+async function apiPost(payload){
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    headers: { "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+  const txt = await res.text();
+  if (txt.trim().startsWith("<")) throw new Error("السكربت رجّع HTML (صلاحيات/نشر).");
+  return JSON.parse(txt);
+}
+
+async function save(){
+  const name = $("name").value.trim();
+  const shelf = $("shelf").value;
+
+  if(!name) return setStatus("اسم الغرض مطلوب", false);
+  if(!shelf) return setStatus("رقم الرف مطلوب", false);
+
+  const id = $("editId").value || crypto.randomUUID();
+
+  // تجهيز صورة (اختياري) - نرسل Base64 للسكربت
+  let imageData = "";
+  const file = $("image").files[0];
+  if(file){
+    // تنبيه: الصور الكبيرة جدًا قد تفشل. لو واجهت ذلك نقوم بضغطها لاحقًا.
+    imageData = await readFileAsDataURL(file);
   }
-  return json({ ok:false });
-}
 
-function saveItem(item){
-  const ss = SpreadsheetApp.getActive();
-  const sh = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
+  const item = normalizeItem({
+    id,
+    name,
+    category: $("category").value,
+    shelf,
+    side: $("side").value,
+    level: $("level").value,
+    zone: $("zone").value,
+    notes: $("notes").value
+  });
 
-  if(sh.getLastRow()===0){
-    sh.appendRow(["name","category","shelf","side","level","zone","notes","image_url","date"]);
+  // حفظ محلي فورًا (عشان ما يختفي عند التحديث)
+  const idx = items.findIndex(x=>x.id===id);
+  if(idx === -1) items.push(item); else items[idx] = item;
+  persistLocal();
+  render();
+
+  try{
+    const res = await apiPost({ action:"save", item:{...item, image:imageData} });
+    if(!res.ok) throw new Error(res.error || "فشل الحفظ");
+    setStatus("✅ تم الحفظ على السحابة", true);
+    clearForm();
+    await loadFromCloud(); // لتحديث رابط الصورة image_url
+  }catch(err){
+    setStatus("⚠️ لم يُرسل للسحابة: " + err.message, false);
   }
+}
 
-  let imgUrl = "";
-  if(item.image){
-    const folder = getFolder();
-    const blob = Utilities.newBlob(
-      Utilities.base64Decode(item.image.split(",")[1]),
-      "image/jpeg",
-      "img.jpg"
-    );
-    const file = folder.createFile(blob);
-    imgUrl = file.getUrl();
+async function loadFromCloud(){
+  try{
+    const res = await apiGet();
+    if(!res.ok) throw new Error(res.error || "فشل الجلب");
+    const cloud = (res.items || []).map(normalizeItem);
+
+    // دمج: السحابة هي المصدر الأساسي، لكن نحافظ على المحلي لو فيه عناصر غير مرفوعة
+    const byId = new Map();
+    cloud.forEach(i=>byId.set(i.id, i));
+    items.forEach(i=>{ if(!byId.has(i.id)) byId.set(i.id, i); });
+
+    items = Array.from(byId.values());
+    persistLocal();
+    render();
+    setStatus("✅ تم التحديث من السحابة", true);
+  }catch(err){
+    setStatus("⚠️ لم يتم التحديث من السحابة: " + err.message, false);
   }
-
-  sh.appendRow([
-    item.name,
-    item.category,
-    item.shelf,
-    item.side,
-    item.level,
-    item.zone,
-    item.notes,
-    imgUrl,
-    new Date()
-  ]);
 }
 
-function getItems(){
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-  if(!sh) return [];
-  const rows = sh.getDataRange().getValues();
-  rows.shift();
-  return rows.map(r=>({
-    name:r[0], category:r[1], shelf:r[2], side:r[3],
-    level:r[4], zone:r[5], notes:r[6], image_url:r[7]
-  }));
+function editItem(id){
+  const o = items.find(x=>x.id===id);
+  if(!o) return;
+  $("editId").value = o.id;
+  $("name").value = o.name;
+  $("category").value = o.category;
+  $("shelf").value = o.shelf;
+  $("side").value = o.side;
+  $("level").value = o.level;
+  $("zone").value = o.zone;
+  $("notes").value = o.notes;
+  window.scrollTo({top:0, behavior:"smooth"});
 }
 
-function getFolder(){
-  const fs = DriveApp.getFoldersByName(FOLDER_NAME);
-  return fs.hasNext()?fs.next():DriveApp.createFolder(FOLDER_NAME);
+async function deleteItem(id){
+  if(!confirm("حذف الغرض؟")) return;
+
+  // حذف محلي
+  items = items.filter(x=>x.id!==id);
+  persistLocal();
+  render();
+
+  // حذف سحابي
+  try{
+    const res = await apiPost({ action:"delete", id });
+    if(!res.ok) throw new Error(res.error || "فشل الحذف");
+    setStatus("✅ تم الحذف من السحابة", true);
+  }catch(err){
+    setStatus("⚠️ لم يتم حذف السحابة: " + err.message, false);
+  }
 }
 
-function json(o){
-  return ContentService.createTextOutput(JSON.stringify(o))
-    .setMimeType(ContentService.MimeType.JSON);
+function render(){
+  const q = $("search").value.trim();
+  const list = $("list");
+  list.innerHTML = "";
+
+  const filtered = items
+    .filter(i => !q || i.name.includes(q) || String(i.shelf).includes(q))
+    .sort((a,b)=> String(a.shelf).localeCompare(String(b.shelf), "ar") );
+
+  filtered.forEach(i=>{
+    const div = document.createElement("div");
+    div.className = "item";
+    div.innerHTML = `
+      ${i.image_url ? `<img src="${i.image_url}" alt="">` : `<img src="https://via.placeholder.com/56" alt="">`}
+      <div>
+        <strong>${escapeHtml(i.name)}</strong>
+        ${i.category ? `<span class="tag">${escapeHtml(i.category)}</span>`:""}
+        <div>رف ${escapeHtml(i.shelf)} - ${escapeHtml(i.side||"")} - ${escapeHtml(i.level||"")}</div>
+        ${i.zone ? `<div class="muted">${escapeHtml(i.zone)}</div>`:""}
+      </div>
+      <div class="miniStack">
+        <button class="btnMini delBtn" onclick="deleteItem('${i.id}')">حذف</button>
+        <button class="btnMini editBtn" onclick="editItem('${i.id}')">تعديل</button>
+      </div>
+    `;
+    list.appendChild(div);
+  });
 }
+
+function escapeHtml(s){
+  return String(s||"").replace(/[&<>"']/g, m => ({
+    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"
+  }[m]));
+}
+
+// تحميل أولي: من المحلي ثم محاولة من السحابة
+render();
+loadFromCloud();
+</script>
+</body>
+</html>

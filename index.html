@@ -75,6 +75,7 @@
 
 <div class="container">
 
+  <!-- نموذج الإدخال -->
   <div class="card form">
     <input id="name" placeholder="اسم الغرض">
     <input id="category" placeholder="التصنيف">
@@ -84,94 +85,37 @@
     <input id="zone" placeholder="المنطقة">
     <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-    <button class="save" onclick="saveItem()">حفظ</button>
+    <button class="save" onclick="saveItem()">💾 حفظ</button>
   </div>
 
-  <div class="card list" id="itemsList">جاري التحميل...</div>
+  <!-- قائمة الأغراض -->
+  <div class="card list" id="itemsList">
+    جاري التحميل...
+  </div>
 
 </div>
 
 <script>
-const API_URL = "const SHEET_NAME = "items";
-
-function doGet() {
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-  const data = sh.getDataRange().getValues();
-  const headers = data.shift();
-
-  const items = data.map(r=>{
-    let o = {};
-    headers.forEach((h,i)=>o[h]=r[i]);
-    return o;
-  });
-
-  return ContentService
-    .createTextOutput(JSON.stringify(items))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e){
-  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
-  const body = JSON.parse(e.postData.contents);
-
-  if(body.delete){
-    const rows = sh.getDataRange().getValues();
-    for(let i=1;i<rows.length;i++){
-      if(rows[i][0]==body.id){
-        sh.deleteRow(i+1);
-        break;
-      }
-    }
-    return ok();
-  }
-
-  const id = body.id || Date.now();
-
-  const row = [
-    id,
-    body.name || "",
-    body.category || "",
-    body.shelf || "",
-    body.side || "",
-    body.level || "",
-    body.zone || "",
-    body.notes || "",
-    new Date(),
-    ""
-  ];
-
-  if(body.id){
-    const rows = sh.getDataRange().getValues();
-    for(let i=1;i<rows.length;i++){
-      if(rows[i][0]==body.id){
-        sh.getRange(i+1,1,1,row.length).setValues([row]);
-        break;
-      }
-    }
-  }else{
-    sh.appendRow(row);
-  }
-
-  return ok();
-}
-
-function ok(){
-  return ContentService.createTextOutput("ok");
-}
-";
+/* رابط Google Apps Script */
+const API_URL = "https://script.google.com/macros/s/AKfycbz8GKmEkmzOj_WrqCou9O9gpY7qBNL0TwcMU4Y1eeKSW8cH-QFPRIRcH-yTUwvW1K-9/exec";
 
 let items = [];
 let editId = null;
 
+/* تحميل البيانات */
 function loadItems(){
   fetch(API_URL)
-    .then(r=>r.json())
-    .then(d=>{
-      items = d;
+    .then(r => r.json())
+    .then(data => {
+      items = data;
       render();
+    })
+    .catch(()=>{
+      document.getElementById("itemsList").innerText = "تعذر تحميل البيانات";
     });
 }
 
+/* عرض القائمة */
 function render(){
   const box = document.getElementById("itemsList");
   box.innerHTML = "";
@@ -185,20 +129,23 @@ function render(){
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
-      <div class="item-title">${i.name || "بدون اسم"} (رف ${i.shelf})</div>
+      <div class="item-title">
+        ${i.name || "بدون اسم"} (رف ${i.shelf || "-"})
+      </div>
       <div>${i.category || ""}</div>
       <div class="row">
-        <button class="edit" onclick="editItem(${i.id})">تعديل</button>
-        <button class="delete" onclick="deleteItem(${i.id})">حذف</button>
+        <button class="edit" onclick="editItem(${i.id})">✏️ تعديل</button>
+        <button class="delete" onclick="deleteItem(${i.id})">🗑️ حذف</button>
       </div>
     `;
     box.appendChild(div);
   });
 }
 
+/* حفظ / تعديل */
 function saveItem(){
   if(!name.value.trim()){
-    alert("اكتب اسم الغرض");
+    alert("يرجى كتابة اسم الغرض");
     return;
   }
 
@@ -223,18 +170,22 @@ function saveItem(){
   setTimeout(loadItems, 2000);
 }
 
+/* تحميل بيانات للتعديل */
 function editItem(id){
   const i = items.find(x=>x.id==id);
+  if(!i) return;
+
   editId = id;
-  name.value = i.name;
-  category.value = i.category;
-  shelf.value = i.shelf;
-  side.value = i.side;
-  level.value = i.level;
-  zone.value = i.zone;
-  notes.value = i.notes;
+  name.value = i.name || "";
+  category.value = i.category || "";
+  shelf.value = i.shelf || "";
+  side.value = i.side || "";
+  level.value = i.level || "";
+  zone.value = i.zone || "";
+  notes.value = i.notes || "";
 }
 
+/* حذف */
 function deleteItem(id){
   if(!confirm("تأكيد الحذف؟")) return;
 
@@ -247,11 +198,13 @@ function deleteItem(id){
   setTimeout(loadItems, 2000);
 }
 
+/* مسح النموذج */
 function clearForm(){
   editId = null;
   document.querySelectorAll("input,textarea").forEach(e=>e.value="");
 }
 
+/* تشغيل أولي */
 loadItems();
 </script>
 

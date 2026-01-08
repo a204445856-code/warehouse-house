@@ -235,3 +235,27 @@ function send(img,file){
       imageName:file?.name,
       imageType:file?.type
     })
+  }).then(()=>location.reload());
+}
+
+function del(i){
+  if(!confirm("هل تريد الحذف؟"))return;
+  fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({action:"delete",row:i+2})
+  }).then(()=>location.reload());
+}
+
+search.oninput=()=>{
+  const v=search.value;
+  list.innerHTML="";
+  items.filter(i=>
+    (i.name||"").includes(v) || (""+i.shelf).includes(v)
+  ).forEach(()=>render());
+};
+
+load();
+</script>
+
+</body>
+</html>

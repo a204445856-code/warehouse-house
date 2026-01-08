@@ -6,56 +6,22 @@
 <title>مستودع البيت</title>
 
 <style>
-body{
-  direction:rtl;
-  font-family:Arial;
-  background:#f4f4f4;
-  margin:0;
-}
-header{
-  text-align:center;
-  padding:20px;
-  font-size:22px;
-  font-weight:bold;
-}
-.container{
-  display:flex;
-  gap:20px;
-  padding:20px;
-}
-.left,.right{
-  background:#fff;
-  padding:15px;
-  border-radius:10px;
-}
+body{direction:rtl;font-family:Arial;background:#f4f4f4;margin:0}
+header{text-align:center;padding:20px;font-size:22px;font-weight:bold}
+.container{display:flex;gap:20px;padding:20px}
+.left,.right{background:#fff;padding:15px;border-radius:10px}
 .left{width:30%}
 .right{width:70%}
-input,textarea,select{
-  width:100%;
-  padding:8px;
-  margin-bottom:8px;
-}
-button{
-  padding:10px;
-  border:none;
-  border-radius:8px;
-  cursor:pointer;
-}
-.save{
-  background:#2563eb;
-  color:#fff;
-}
-.item{
-  border:1px solid #ddd;
-  padding:10px;
-  border-radius:8px;
-  margin-bottom:8px;
-  cursor:pointer;
-}
-.item:hover{background:#f0f0f0}
+input,textarea,select{width:100%;padding:8px;margin-bottom:8px}
+button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer}
+.save{background:#2563eb;color:#fff}
+.edit{background:#f59e0b;color:#fff}
+.delete{background:#ef4444;color:#fff}
+.item{border:1px solid #ddd;padding:8px;border-radius:8px;margin-bottom:8px}
+.actions{display:flex;gap:5px;margin-top:5px}
 @media(max-width:768px){
-  .container{flex-direction:column}
-  .left,.right{width:100%}
+.container{flex-direction:column}
+.left,.right{width:100%}
 }
 </style>
 </head>
@@ -66,150 +32,93 @@ button{
 
 <div class="container">
 
-  <!-- القائمة -->
-  <div class="left">
-    <input id="search" placeholder="ابحث بالاسم أو رقم الرف">
-    <div id="itemsList"></div>
-  </div>
+<div class="left">
+  <input id="search" placeholder="ابحث">
+  <div id="itemsList"></div>
+</div>
 
-  <!-- النموذج -->
-  <div class="right">
-
-    <input id="name" placeholder="اسم الغرض">
-
-    <select id="category">
-      <option value="">التصنيف</option>
-      <option>مطبخ</option>
-      <option>كهرباء</option>
-      <option>أدوات</option>
-    </select>
-
-    <select id="shelf">
-      <option value="">رقم الرف</option>
-      <option>1</option><option>2</option><option>3</option>
-      <option>4</option><option>5</option>
-    </select>
-
-    <select id="side">
-      <option value="">الجهة</option>
-      <option>يمين</option>
-      <option>يسار</option>
-    </select>
-
-    <select id="level">
-      <option value="">المستوى</option>
-      <option>علوي</option>
-      <option>وسط</option>
-      <option>سفلي</option>
-    </select>
-
-    <select id="zone">
-      <option value="">المنطقة</option>
-      <option>المخزن</option>
-      <option>المطبخ</option>
-      <option>الملحق</option>
-    </select>
-
-    <textarea id="notes" placeholder="ملاحظات"></textarea>
-
-    <input type="file" accept="image/*" capture="environment">
-
-    <button class="save" onclick="saveItem()">حفظ</button>
-
-    <hr>
-
-    <h3 id="viewName">اختر غرضًا</h3>
-    <div id="viewDetails"></div>
-
-  </div>
+<div class="right">
+  <input id="itemId" type="hidden">
+  <input id="name" placeholder="اسم الغرض">
+  <input id="category" placeholder="التصنيف">
+  <input id="shelf" placeholder="رقم الرف">
+  <input id="side" placeholder="الجهة">
+  <input id="level" placeholder="المستوى">
+  <input id="zone" placeholder="المنطقة">
+  <textarea id="notes" placeholder="ملاحظات"></textarea>
+  <button class="save" onclick="save()">حفظ</button>
+</div>
 
 </div>
 
 <script>
-const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
+const URL="https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
+let items=[];
 
-let items = [];
-
-function loadItems(){
-  fetch(SCRIPT_URL + "?t=" + Date.now())
-    .then(res => res.json())
-    .then(data => {
-      items = data;
-      render(items);
-    });
+function load(){
+ fetch(URL).then(r=>r.json()).then(d=>{
+  items=d;
+  render(items);
+ });
 }
 
 function render(list){
-  itemsList.innerHTML = "";
-  list.forEach((item, index) => {
-    const name =
-      item.name && item.name.trim() !== ""
-        ? item.name
-        : "غرض بدون اسم";
-
-    const div = document.createElement("div");
-    div.className = "item";
-    div.textContent = name + " (رف " + item.shelf + ")";
-    div.onclick = () => showItem(index);
-    itemsList.appendChild(div);
-  });
+ itemsList.innerHTML="";
+ list.forEach(i=>{
+  const div=document.createElement("div");
+  div.className="item";
+  div.innerHTML=`
+    <b>${i.name||"غرض بدون اسم"}</b> (رف ${i.shelf})
+    <div class="actions">
+      <button class="edit" onclick='edit(${JSON.stringify(i)})'>تعديل</button>
+      <button class="delete" onclick='del(${i.id})'>حذف</button>
+    </div>`;
+  itemsList.appendChild(div);
+ });
 }
 
-function showItem(i){
-  const item = items[i];
-  const name =
-    item.name && item.name.trim() !== ""
-      ? item.name
-      : "غرض بدون اسم";
-
-  viewName.textContent = name;
-  viewDetails.innerHTML = `
-    <div>التصنيف: ${item.category || "-"}</div>
-    <div>الرف: ${item.shelf || "-"}</div>
-    <div>الجهة: ${item.side || "-"}</div>
-    <div>المستوى: ${item.level || "-"}</div>
-    <div>المنطقة: ${item.zone || "-"}</div>
-    <div>ملاحظات: ${item.notes || "-"}</div>
-  `;
+function edit(i){
+ itemId.value=i.id;
+ name.value=i.name;
+ category.value=i.category;
+ shelf.value=i.shelf;
+ side.value=i.side;
+ level.value=i.level;
+ zone.value=i.zone;
+ notes.value=i.notes;
 }
 
-function saveItem(){
-  const data = {
-    name: name.value,
-    category: category.value,
-    shelf: shelf.value,
-    side: side.value,
-    level: level.value,
-    zone: zone.value,
-    notes: notes.value,
-    image_url: ""
-  };
-
-  fetch(SCRIPT_URL,{
-    method:"POST",
-    mode:"no-cors",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify(data)
-  });
-
-  alert("✅ تم حفظ الغرض");
-
-  document.querySelectorAll("input, textarea, select").forEach(e => e.value = "");
-  setTimeout(loadItems, 1200);
+function save(){
+ const data={
+  action:itemId.value?"update":"add",
+  id:itemId.value,
+  name:name.value,
+  category:category.value,
+  shelf:shelf.value,
+  side:side.value,
+  level:level.value,
+  zone:zone.value,
+  notes:notes.value
+ };
+ fetch(URL,{method:"POST",mode:"no-cors",body:JSON.stringify(data)});
+ alert("تم الحفظ");
+ clear();
+ setTimeout(load,1000);
 }
 
-search.oninput = () => {
-  const v = search.value.trim();
-  render(
-    items.filter(i =>
-      (i.name || "").includes(v) ||
-      String(i.shelf || "").includes(v)
-    )
-  );
-};
+function del(id){
+ if(!confirm("هل تريد الحذف؟"))return;
+ fetch(URL,{method:"POST",mode:"no-cors",body:JSON.stringify({action:"delete",id})});
+ setTimeout(load,1000);
+}
 
-loadItems();
+function clear(){
+ document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+}
+
+search.oninput=()=>render(items.filter(i=>(i.name||"").includes(search.value)));
+
+load();
 </script>
 
 </body>

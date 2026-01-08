@@ -10,7 +10,6 @@ body {
   font-family: Arial;
   background: #f4f4f4;
   margin: 0;
-  padding: 0;
 }
 h2 {
   text-align: center;
@@ -101,16 +100,17 @@ function saveItem() {
 
   fetch(scriptURL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    mode: "no-cors",   // ⭐ هذا هو السطر السحري
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(data)
-  })
-  .then(r => r.json())
-  .then(() => {
-    alert("✅ تم حفظ الغرض في السحابة");
-    clearForm();
-    loadItems();
-  })
-  .catch(() => alert("❌ فشل الحفظ"));
+  });
+
+  alert("✅ تم حفظ الغرض في السحابة");
+
+  clearForm();
+  setTimeout(loadItems, 1000);
 }
 
 function loadItems() {

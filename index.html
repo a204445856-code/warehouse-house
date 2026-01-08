@@ -7,7 +7,7 @@
 <style>
 body{
   font-family: Tahoma;
-  background:#f3f3f3;
+  background:#f2f2f2;
   margin:0;
   padding:20px
 }
@@ -31,19 +31,14 @@ button{
   background:#2d6cdf;
   color:#fff;
   border:none;
-  border-radius:6px
+  border-radius:6px;
+  cursor:pointer
 }
 .item{
   border:1px solid #ddd;
   padding:10px;
   border-radius:8px;
-  margin-bottom:10px;
-  cursor:pointer
-}
-.item img{
-  max-width:100%;
-  margin-top:8px;
-  border-radius:6px
+  margin-bottom:10px
 }
 .actions{
   display:flex;
@@ -52,12 +47,34 @@ button{
 }
 .edit{background:#f39c12}
 .delete{background:#e74c3c}
+.view{background:#16a085}
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.6);
+  display:none;
+  align-items:center;
+  justify-content:center
+}
+.modal-content{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  max-width:400px;
+  width:90%
+}
+.modal img{
+  width:100%;
+  border-radius:8px;
+  margin-top:10px
+}
 </style>
 </head>
 
 <body>
 
 <h1>📦 مستودع البيت</h1>
+<button onclick="openGallery()">📷 استعراض الصور</button>
 
 <div class="container">
 
@@ -75,8 +92,7 @@ button{
   <select id="shelf">
     <option value="">رقم الرف</option>
     <script>
-      for(let i=1;i<=50;i++)
-        document.write(`<option>${i}</option>`);
+      for(let i=1;i<=50;i++)document.write(`<option>${i}</option>`)
     </script>
   </select>
 
@@ -100,7 +116,6 @@ button{
 
   <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-  <!-- زر الصورة (كاميرا الجوال) -->
   <input type="file" id="image" accept="image/*" capture="environment">
 
   <button onclick="save()">حفظ</button>
@@ -114,15 +129,21 @@ button{
 
 </div>
 
+<!-- نافذة عرض الصورة -->
+<div class="modal" id="modal" onclick="closeModal()">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div id="modalBody"></div>
+    <button onclick="closeModal()">إغلاق</button>
+  </div>
+</div>
+
 <script>
-const URL = "https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
+const URL = "https://script.google.com/macros/s/AKfycbyn2fdActNwl0niZeBvgy9J2Vu74EKdfG9dEt4uk9gQS5-5YrSF3TwgcKEzG1_Nvplc/exec";
 
 let items=[];
 
 function load(){
-  fetch(URL)
-  .then(r=>r.json())
-  .then(d=>{
+  fetch(URL).then(r=>r.json()).then(d=>{
     items=d;
     render();
   });
@@ -132,20 +153,55 @@ function render(){
   list.innerHTML="";
   items.forEach((i,idx)=>{
     list.innerHTML+=`
-      <div class="item" onclick="show(${idx})">
+      <div class="item">
         <b>${i.name || "غرض بدون اسم"} (رف ${i.shelf})</b>
-
         <div class="actions">
-          <button class="edit" onclick="event.stopPropagation();edit(${idx})">تعديل</button>
-          <button class="delete" onclick="event.stopPropagation();del(${idx})">حذف</button>
+          ${i.image_url?`<button class="view" onclick="view(${idx})">👁️</button>`:""}
+          <button class="edit" onclick="fill(${idx})">تعديل</button>
+          <button class="delete" onclick="del(${idx})">حذف</button>
         </div>
       </div>
     `;
   });
 }
 
-function show(i){
-  const it = items[i];
+function view(i){
+  const it=items[i];
+  modalBody.innerHTML=`
+    <h3>${it.name||""}</h3>
+    <p><b>التصنيف:</b> ${it.category}</p>
+    <p><b>الرف:</b> ${it.shelf}</p>
+    <p><b>الجهة:</b> ${it.side}</p>
+    <p><b>المستوى:</b> ${it.level}</p>
+    <p><b>المنطقة:</b> ${it.zone}</p>
+    <p><b>ملاحظات:</b> ${it.notes}</p>
+    <img src="${it.image_url}">
+  `;
+  modal.style.display="flex";
+}
+
+function closeModal(){
+  modal.style.display="none";
+}
+
+function openGallery(){
+  let html="<h2>📷 استعراض الصور</h2>";
+  items.forEach(i=>{
+    if(i.image_url){
+      html+=`
+        <div style="margin-bottom:15px">
+          <b>${i.name||""} (رف ${i.shelf})</b><br>
+          <img src="${i.image_url}" style="width:100%;border-radius:8px">
+        </div>
+      `;
+    }
+  });
+  const w=window.open("");
+  w.document.write(`<html><body style="font-family:tahoma">${html}</body></html>`);
+}
+
+function fill(i){
+  const it=items[i];
   name.value=it.name;
   category.value=it.category;
   shelf.value=it.shelf;
@@ -153,22 +209,15 @@ function show(i){
   level.value=it.level;
   zone.value=it.zone;
   notes.value=it.notes;
-
-  if(it.image_url){
-    alert("الصورة ستفتح في نافذة جديدة");
-    window.open(it.image_url);
-  }
 }
 
 function save(){
-  const file=image.files[0];
-  if(file){
+  const f=image.files[0];
+  if(f){
     const r=new FileReader();
-    r.onload=()=>send(r.result.split(",")[1],file);
-    r.readAsDataURL(file);
-  }else{
-    send();
-  }
+    r.onload=()=>send(r.result.split(",")[1],f);
+    r.readAsDataURL(f);
+  }else send();
 }
 
 function send(img,file){
@@ -186,26 +235,3 @@ function send(img,file){
       imageName:file?.name,
       imageType:file?.type
     })
-  }).then(()=>location.reload());
-}
-
-function del(i){
-  if(!confirm("هل تريد الحذف؟"))return;
-  fetch(URL,{
-    method:"POST",
-    body:JSON.stringify({action:"delete",row:i+2})
-  }).then(()=>location.reload());
-}
-
-search.oninput=()=>{
-  const v=search.value;
-  render(items.filter(i=>
-    (i.name||"").includes(v) || (""+i.shelf).includes(v)
-  ));
-};
-
-load();
-</script>
-
-</body>
-</html>

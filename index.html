@@ -1,33 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8">
+<title>مستودع البيت</title>
+
+<style>
+body {
+  direction: rtl;
+  font-family: Arial;
+  background: #f4f4f4;
+  margin: 0;
+  padding: 0;
+}
+h2 {
+  text-align: center;
+  padding: 15px;
+}
+.container {
+  display: flex;
+  gap: 20px;
+  padding: 20px;
+}
+.left, .right {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+}
+.left {
+  width: 35%;
+}
+.right {
+  width: 65%;
+}
+input, textarea {
+  width: 100%;
+  padding: 6px;
+  margin: 5px 0;
+}
+button {
+  padding: 8px 14px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.save {
+  background: #2563eb;
+  color: #fff;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  padding: 6px;
+  border-bottom: 1px solid #ddd;
+}
+</style>
+</head>
+
+<body>
+
+<h2>📦 مستودع البيت</h2>
+
+<div class="container">
+
+  <div class="left">
+    <h3>الأغراض المخزنة</h3>
+    <ul id="itemsList"></ul>
+  </div>
+
+  <div class="right">
+    <input id="name" placeholder="اسم الغرض">
+    <input id="category" placeholder="التصنيف">
+    <input id="shelf" placeholder="رقم الرف">
+    <input id="side" placeholder="الجهة">
+    <input id="level" placeholder="المستوى">
+    <input id="zone" placeholder="المنطقة">
+    <textarea id="notes" placeholder="ملاحظات"></textarea>
+
+    <button class="save" type="button" onclick="saveItem()">حفظ</button>
+  </div>
+
+</div>
+
 <script>
 const scriptURL =
-"https://script.google.com/macros/s/AKfycbzRYyd1N_Pi91UZqrHSr-zjDFp_vf6-MIHChIL4bRwDiH5pWxcb5y1ppfsncM74_Pzf/exec";
+"https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
 
 function saveItem() {
   const data = {
-    name: document.getElementById("name")?.value,
-    category: document.getElementById("category")?.value,
-    shelf: document.getElementById("shelf")?.value,
-    side: document.getElementById("side")?.value,
-    level: document.getElementById("level")?.value,
-    zone: document.getElementById("zone")?.value,
-    notes: document.getElementById("notes")?.value,
+    name: name.value,
+    category: category.value,
+    shelf: shelf.value,
+    side: side.value,
+    level: level.value,
+    zone: zone.value,
+    notes: notes.value,
     image_url: ""
   };
 
   fetch(scriptURL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
   })
-  .then(res => res.json())
+  .then(r => r.json())
   .then(() => {
-    alert("✅ تم الحفظ في السحابة");
+    alert("✅ تم حفظ الغرض في السحابة");
+    clearForm();
+    loadItems();
   })
-  .catch(err => {
-    console.error(err);
-    alert("❌ خطأ أثناء الحفظ");
-  });
+  .catch(() => alert("❌ فشل الحفظ"));
 }
+
+function loadItems() {
+  fetch(scriptURL)
+    .then(r => r.json())
+    .then(data => {
+      itemsList.innerHTML = "";
+      data.forEach(i => {
+        const li = document.createElement("li");
+        li.textContent = `${i.name} — رف ${i.shelf} (${i.zone})`;
+        itemsList.appendChild(li);
+      });
+    });
+}
+
+function clearForm() {
+  document.querySelectorAll("input, textarea").forEach(e => e.value = "");
+}
+
+loadItems();
 </script>
+
+</body>
+</html>

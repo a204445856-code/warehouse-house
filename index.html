@@ -26,15 +26,27 @@ h2 {
   border-radius: 8px;
 }
 .left {
-  width: 35%;
+  width: 30%;
 }
 .right {
-  width: 65%;
+  width: 70%;
+}
+ul {
+  list-style: none;
+  padding: 0;
+}
+li {
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+}
+li:hover {
+  background: #f0f0f0;
 }
 input, textarea {
   width: 100%;
   padding: 6px;
-  margin: 6px 0;
+  margin: 5px 0;
 }
 button {
   padding: 8px 16px;
@@ -44,13 +56,14 @@ button {
   color: #fff;
   cursor: pointer;
 }
-ul {
-  list-style: none;
-  padding: 0;
+img {
+  max-width: 100%;
+  margin-top: 10px;
+  border-radius: 6px;
 }
-li {
-  padding: 6px;
-  border-bottom: 1px solid #ddd;
+.label {
+  font-weight: bold;
+  margin-top: 6px;
 }
 </style>
 </head>
@@ -61,21 +74,26 @@ li {
 
 <div class="container">
 
+  <!-- القائمة -->
   <div class="left">
-    <h3>الأغراض المخزنة</h3>
+    <h3>الأغراض</h3>
     <ul id="itemsList"></ul>
   </div>
 
+  <!-- التفاصيل -->
   <div class="right">
-    <input id="name" placeholder="اسم الغرض">
-    <input id="category" placeholder="التصنيف">
-    <input id="shelf" placeholder="رقم الرف">
-    <input id="side" placeholder="الجهة">
-    <input id="level" placeholder="المستوى">
-    <input id="zone" placeholder="المنطقة">
-    <textarea id="notes" placeholder="ملاحظات"></textarea>
+    <h3 id="itemName">اختر غرضًا</h3>
 
-    <button type="button" onclick="saveItem()">حفظ</button>
+    <div class="label">التصنيف:</div>
+    <div id="itemCategory"></div>
+
+    <div class="label">المكان:</div>
+    <div id="itemLocation"></div>
+
+    <div class="label">ملاحظات:</div>
+    <div id="itemNotes"></div>
+
+    <img id="itemImage" style="display:none;">
   </div>
 
 </div>
@@ -84,46 +102,38 @@ li {
 const scriptURL =
 "https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
 
-function saveItem() {
-  const data = {
-    name: name.value,
-    category: category.value,
-    shelf: shelf.value,
-    side: side.value,
-    level: level.value,
-    zone: zone.value,
-    notes: notes.value,
-    image_url: ""
-  };
-
-  fetch(scriptURL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-
-  alert("✅ تم حفظ الغرض في السحابة");
-
-  clearForm();
-  setTimeout(loadItems, 1200);
-}
+let allItems = [];
 
 function loadItems() {
   fetch(scriptURL)
     .then(r => r.json())
     .then(data => {
+      allItems = data;
       itemsList.innerHTML = "";
-      data.forEach(i => {
+      data.forEach((item, index) => {
         const li = document.createElement("li");
-        li.textContent = `${i.name} — رف ${i.shelf}`;
+        li.textContent = item.name;
+        li.onclick = () => showItem(index);
         itemsList.appendChild(li);
       });
     });
 }
 
-function clearForm() {
-  document.querySelectorAll("input, textarea").forEach(e => e.value = "");
+function showItem(index) {
+  const item = allItems[index];
+
+  itemName.textContent = item.name;
+  itemCategory.textContent = item.category || "-";
+  itemLocation.textContent =
+    `رف ${item.shelf} – ${item.zone}`;
+  itemNotes.textContent = item.notes || "-";
+
+  if (item.image_url) {
+    itemImage.src = item.image_url;
+    itemImage.style.display = "block";
+  } else {
+    itemImage.style.display = "none";
+  }
 }
 
 loadItems();

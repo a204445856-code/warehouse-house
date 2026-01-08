@@ -38,7 +38,7 @@
       max-height:80vh;
       overflow:auto;
     }
-    input, select, textarea, button{
+    input, textarea, button{
       width:100%;
       margin-bottom:10px;
       padding:8px;
@@ -85,7 +85,7 @@
     <input id="zone" placeholder="المنطقة">
     <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-    <button class="save" onclick="saveItem()">💾 حفظ</button>
+    <button class="save" onclick="saveItem()">حفظ</button>
   </div>
 
   <!-- القائمة -->
@@ -96,8 +96,8 @@
 </div>
 
 <script>
-/* 🔗 رابط Google Apps Script */
-const API_URL = "https://script.google.com/macros/s/AKfycbwZsx4TjB_XUY6CmkNeWmvA9_CiN9pTxVg5uvKa3TaT5mZZVrQ0kXK9rRjQM7sTMIYt/exec";
+/* رابط Google Apps Script */
+const API_URL = "https://script.google.com/macros/s/AKfycbyM_6gt_OtA7wKzeKybEnyXRdvD32R-aMZ90gXks1MNlB_K6d-APnymh_Xr8WsnFlYV/exec";
 
 let items = [];
 let editId = null;
@@ -110,8 +110,9 @@ function loadItems(){
       items = data;
       render();
     })
-    .catch(() => {
-      document.getElementById("itemsList").innerHTML = "خطأ في تحميل البيانات";
+    .catch(err=>{
+      document.getElementById("itemsList").innerText = "خطأ في تحميل البيانات";
+      console.error(err);
     });
 }
 
@@ -129,28 +130,30 @@ function render(){
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
-      <div class="item-title">${i.name || "بدون اسم"} (رف ${i.shelf || "-"})</div>
+      <div class="item-title">
+        ${i.name || "بدون اسم"} (رف ${i.shelf || "-"})
+      </div>
       <div>${i.category || ""}</div>
       <div class="row">
-        <button class="edit" onclick="editItem(${i.id})">✏️ تعديل</button>
-        <button class="delete" onclick="deleteItem(${i.id})">🗑️ حذف</button>
+        <button class="edit" onclick="editItem(${i.id})">تعديل</button>
+        <button class="delete" onclick="deleteItem(${i.id})">حذف</button>
       </div>
     `;
     box.appendChild(div);
   });
 }
 
-/* حفظ */
+/* حفظ / تعديل */
 function saveItem(){
-  const nameValue = document.getElementById("name").value.trim();
-  if(!nameValue){
-    alert("اكتب اسم الغرض");
+  const name = document.getElementById("name").value.trim();
+  if(!name){
+    alert("يرجى كتابة اسم الغرض");
     return;
   }
 
   const data = {
     id: editId,
-    name: nameValue,
+    name: name,
     category: category.value,
     shelf: shelf.value,
     side: side.value,
@@ -161,43 +164,59 @@ function saveItem(){
 
   fetch(API_URL,{
     method:"POST",
-    body:JSON.stringify(data)
-  }).then(()=>{
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify(data)
+  })
+  .then(r=>r.json())
+  .then(()=>{
     clearForm();
     loadItems();
+  })
+  .catch(err=>{
+    alert("خطأ أثناء الحفظ");
+    console.error(err);
   });
 }
 
-/* تعديل */
+/* تحميل بيانات للتعديل */
 function editItem(id){
-  const i = items.find(x => x.id == id);
+  const i = items.find(x=>x.id==id);
   if(!i) return;
+
   editId = id;
-  name.value = i.name || "";
-  category.value = i.category || "";
-  shelf.value = i.shelf || "";
-  side.value = i.side || "";
-  level.value = i.level || "";
-  zone.value = i.zone || "";
-  notes.value = i.notes || "";
+  name.value = i.name;
+  category.value = i.category;
+  shelf.value = i.shelf;
+  side.value = i.side;
+  level.value = i.level;
+  zone.value = i.zone;
+  notes.value = i.notes;
 }
 
 /* حذف */
 function deleteItem(id){
   if(!confirm("تأكيد الحذف؟")) return;
+
   fetch(API_URL,{
     method:"POST",
-    body:JSON.stringify({delete:true,id})
-  }).then(loadItems);
+    headers:{
+      "Content-Type":"application/json"
+    },
+    body: JSON.stringify({delete:true,id})
+  })
+  .then(r=>r.json())
+  .then(loadItems);
 }
 
-/* تنظيف النموذج */
+/* مسح النموذج */
 function clearForm(){
   editId = null;
   document.querySelectorAll("input,textarea").forEach(e=>e.value="");
 }
 
-/* تشغيل أولي */
+/* تشغيل */
 loadItems();
 </script>
 

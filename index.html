@@ -2,27 +2,21 @@
 <html lang="ar">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>مستودع البيت</title>
 
 <style>
 body{direction:rtl;font-family:Arial;background:#f4f4f4;margin:0}
-header{text-align:center;padding:20px;font-size:22px;font-weight:bold}
-.container{display:flex;gap:20px;padding:20px}
-.left,.right{background:#fff;padding:15px;border-radius:10px}
-.left{width:30%}
-.right{width:70%}
-input,textarea,select{width:100%;padding:8px;margin-bottom:8px}
-button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer}
-.save{background:#2563eb;color:#fff}
-.edit{background:#f59e0b;color:#fff}
-.delete{background:#ef4444;color:#fff}
+header{text-align:center;font-size:24px;padding:15px}
+.container{display:flex;gap:15px;padding:15px}
+.list,.form{background:#fff;padding:15px;border-radius:10px}
+.list{width:35%}
+.form{width:65%}
 .item{border:1px solid #ddd;padding:8px;border-radius:8px;margin-bottom:8px}
 .actions{display:flex;gap:5px;margin-top:5px}
-@media(max-width:768px){
-.container{flex-direction:column}
-.left,.right{width:100%}
-}
+button{border:none;border-radius:6px;padding:5px 8px;cursor:pointer}
+.del{background:#ef4444;color:#fff}
+@media(max-width:768px){.container{flex-direction:column}.list,.form{width:100%}}
 </style>
 </head>
 
@@ -31,93 +25,69 @@ button{padding:6px 10px;border:none;border-radius:6px;cursor:pointer}
 <header>📦 مستودع البيت</header>
 
 <div class="container">
+  <div class="list">
+    <input id="search" placeholder="ابحث">
+    <div id="items"></div>
+  </div>
 
-<div class="left">
-  <input id="search" placeholder="ابحث">
-  <div id="itemsList"></div>
-</div>
-
-<div class="right">
-  <input id="itemId" type="hidden">
-  <input id="name" placeholder="اسم الغرض">
-  <input id="category" placeholder="التصنيف">
-  <input id="shelf" placeholder="رقم الرف">
-  <input id="side" placeholder="الجهة">
-  <input id="level" placeholder="المستوى">
-  <input id="zone" placeholder="المنطقة">
-  <textarea id="notes" placeholder="ملاحظات"></textarea>
-  <button class="save" onclick="save()">حفظ</button>
-</div>
-
+  <div class="form">
+    <input id="name" placeholder="اسم الغرض">
+    <input id="category" placeholder="التصنيف">
+    <input id="shelf" placeholder="رقم الرف">
+    <textarea id="notes" placeholder="ملاحظات"></textarea>
+    <button onclick="save()">حفظ</button>
+    <hr>
+    <h3 id="viewName"></h3>
+  </div>
 </div>
 
 <script>
-const URL="https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
-let items=[];
+const URL="ضع_رابط_AppsScript_هنا";
+let data=[];
 
 function load(){
  fetch(URL).then(r=>r.json()).then(d=>{
-  items=d;
-  render(items);
+  data=d;
+  render(d);
  });
 }
 
 function render(list){
- itemsList.innerHTML="";
+ items.innerHTML="";
  list.forEach(i=>{
   const div=document.createElement("div");
   div.className="item";
   div.innerHTML=`
     <b>${i.name||"غرض بدون اسم"}</b> (رف ${i.shelf})
     <div class="actions">
-      <button class="edit" onclick='edit(${JSON.stringify(i)})'>تعديل</button>
-      <button class="delete" onclick='del(${i.id})'>حذف</button>
+      <button class="del" onclick="del(${i.id})">حذف</button>
     </div>`;
-  itemsList.appendChild(div);
+  div.onclick=()=>viewName.textContent=i.name;
+  items.appendChild(div);
  });
 }
 
-function edit(i){
- itemId.value=i.id;
- name.value=i.name;
- category.value=i.category;
- shelf.value=i.shelf;
- side.value=i.side;
- level.value=i.level;
- zone.value=i.zone;
- notes.value=i.notes;
-}
-
 function save(){
- const data={
-  action:itemId.value?"update":"add",
-  id:itemId.value,
-  name:name.value,
-  category:category.value,
-  shelf:shelf.value,
-  side:side.value,
-  level:level.value,
-  zone:zone.value,
-  notes:notes.value
- };
- fetch(URL,{method:"POST",mode:"no-cors",body:JSON.stringify(data)});
- alert("تم الحفظ");
- clear();
+ fetch(URL,{
+  method:"POST",
+  body:JSON.stringify({
+   action:"add",
+   name:name.value,
+   category:category.value,
+   shelf:shelf.value,
+   notes:notes.value
+  })
+ });
  setTimeout(load,1000);
 }
 
 function del(id){
- if(!confirm("هل تريد الحذف؟"))return;
- fetch(URL,{method:"POST",mode:"no-cors",body:JSON.stringify({action:"delete",id})});
+ if(!confirm("حذف؟"))return;
+ fetch(URL,{method:"POST",body:JSON.stringify({action:"delete",id})});
  setTimeout(load,1000);
 }
 
-function clear(){
- document.querySelectorAll("input,textarea").forEach(e=>e.value="");
-}
-
-search.oninput=()=>render(items.filter(i=>(i.name||"").includes(search.value)));
-
+search.oninput=()=>render(data.filter(i=>(i.name||"").includes(search.value)));
 load();
 </script>
 

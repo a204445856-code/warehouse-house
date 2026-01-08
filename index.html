@@ -1,128 +1,33 @@
-<!DOCTYPE html>
-<html lang="ar">
-<head>
-<meta charset="UTF-8">
-<title>إدارة المستودع</title>
-
-<style>
-body {
-  direction: rtl;
-  font-family: Arial;
-  background: #f4f4f4;
-}
-.container {
-  max-width: 1000px;
-  margin: auto;
-  background: #fff;
-  padding: 20px;
-}
-input, textarea {
-  width: 100%;
-  padding: 6px;
-  margin: 4px 0;
-}
-button {
-  padding: 8px 16px;
-  background: #007bff;
-  color: #fff;
-  border: none;
-  cursor: pointer;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 6px;
-  text-align: center;
-}
-th {
-  background: #eee;
-}
-</style>
-</head>
-
-<body>
-
-<div class="container">
-<h2>إدارة المستودع</h2>
-
-<input id="name" placeholder="اسم الصنف">
-<input id="category" placeholder="التصنيف">
-<input id="shelf" placeholder="الرف">
-<input id="side" placeholder="الجهة">
-<input id="level" placeholder="المستوى">
-<input id="zone" placeholder="المنطقة">
-<textarea id="notes" placeholder="ملاحظات"></textarea>
-
-<button onclick="saveItem()">حفظ</button>
-
-<table>
-<thead>
-<tr>
-  <th>الاسم</th>
-  <th>التصنيف</th>
-  <th>الرف</th>
-  <th>الجهة</th>
-  <th>المستوى</th>
-  <th>المنطقة</th>
-  <th>ملاحظات</th>
-</tr>
-</thead>
-<tbody id="itemsTable"></tbody>
-</table>
-</div>
-
 <script>
 const scriptURL =
-"https://script.google.com/macros/s/AKfycbwuKt845COw_-KPv-mD0sL2P-SPzv1mGCcmjj56M0WbLpe8RrOqIF4UoEarUIZ1Myu9/exec";
+"https://script.google.com/macros/s/AKfycbzRYyd1N_Pi91UZqrHSr-zjDFp_vf6-MIHChIL4bRwDiH5pWxcb5y1ppfsncM74_Pzf/exec";
 
 function saveItem() {
   const data = {
-    name: name.value,
-    category: category.value,
-    shelf: shelf.value,
-    side: side.value,
-    level: level.value,
-    zone: zone.value,
-    notes: notes.value
+    name: document.getElementById("name")?.value,
+    category: document.getElementById("category")?.value,
+    shelf: document.getElementById("shelf")?.value,
+    side: document.getElementById("side")?.value,
+    level: document.getElementById("level")?.value,
+    zone: document.getElementById("zone")?.value,
+    notes: document.getElementById("notes")?.value,
+    image_url: ""
   };
 
   fetch(scriptURL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(data)
-  }).then(() => {
-    loadItems();
-    document.querySelectorAll("input, textarea").forEach(e => e.value = "");
+  })
+  .then(res => res.json())
+  .then(() => {
+    alert("✅ تم الحفظ في السحابة");
+  })
+  .catch(err => {
+    console.error(err);
+    alert("❌ خطأ أثناء الحفظ");
   });
 }
-
-function loadItems() {
-  fetch(scriptURL)
-    .then(r => r.json())
-    .then(data => {
-      itemsTable.innerHTML = "";
-      data.forEach(i => {
-        itemsTable.innerHTML += `
-          <tr>
-            <td>${i.name}</td>
-            <td>${i.category}</td>
-            <td>${i.shelf}</td>
-            <td>${i.side}</td>
-            <td>${i.level}</td>
-            <td>${i.zone}</td>
-            <td>${i.notes}</td>
-          </tr>
-        `;
-      });
-    });
-}
-
-loadItems();
 </script>
-
-</body>
-</html>

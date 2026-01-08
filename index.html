@@ -85,7 +85,7 @@
     <input id="zone" placeholder="المنطقة">
     <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-    <button class="save" onclick="saveItem()">حفظ</button>
+    <button class="save" onclick="saveItem()">💾 حفظ</button>
   </div>
 
   <!-- القائمة -->
@@ -96,52 +96,61 @@
 </div>
 
 <script>
-https://script.google.com/macros/s/...
+/* 🔗 رابط Google Apps Script */
+const API_URL = "https://script.google.com/macros/s/AKfycbwZsx4TjB_XUY6CmkNeWmvA9_CiN9pTxVg5uvKa3TaT5mZZVrQ0kXK9rRjQM7sTMIYt/exec";
 
 let items = [];
 let editId = null;
 
+/* تحميل البيانات */
 function loadItems(){
   fetch(API_URL)
-    .then(r=>r.json())
-    .then(data=>{
+    .then(r => r.json())
+    .then(data => {
       items = data;
       render();
+    })
+    .catch(() => {
+      document.getElementById("itemsList").innerHTML = "خطأ في تحميل البيانات";
     });
 }
 
+/* عرض القائمة */
 function render(){
   const box = document.getElementById("itemsList");
   box.innerHTML = "";
-  if(items.length===0){
+
+  if(items.length === 0){
     box.innerHTML = "لا توجد أغراض";
     return;
   }
-  items.reverse().forEach(i=>{
+
+  items.slice().reverse().forEach(i=>{
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
-      <div class="item-title">${i.name || "بدون اسم"} (رف ${i.shelf})</div>
+      <div class="item-title">${i.name || "بدون اسم"} (رف ${i.shelf || "-"})</div>
       <div>${i.category || ""}</div>
       <div class="row">
-        <button class="edit" onclick="editItem(${i.id})">تعديل</button>
-        <button class="delete" onclick="deleteItem(${i.id})">حذف</button>
+        <button class="edit" onclick="editItem(${i.id})">✏️ تعديل</button>
+        <button class="delete" onclick="deleteItem(${i.id})">🗑️ حذف</button>
       </div>
     `;
     box.appendChild(div);
   });
 }
 
+/* حفظ */
 function saveItem(){
-  const name = document.getElementById("name").value.trim();
-  if(!name){
+  const nameValue = document.getElementById("name").value.trim();
+  if(!nameValue){
     alert("اكتب اسم الغرض");
     return;
   }
 
   const data = {
     id: editId,
-    name,
+    name: nameValue,
     category: category.value,
     shelf: shelf.value,
     side: side.value,
@@ -159,18 +168,21 @@ function saveItem(){
   });
 }
 
+/* تعديل */
 function editItem(id){
-  const i = items.find(x=>x.id==id);
+  const i = items.find(x => x.id == id);
+  if(!i) return;
   editId = id;
-  name.value = i.name;
-  category.value = i.category;
-  shelf.value = i.shelf;
-  side.value = i.side;
-  level.value = i.level;
-  zone.value = i.zone;
-  notes.value = i.notes;
+  name.value = i.name || "";
+  category.value = i.category || "";
+  shelf.value = i.shelf || "";
+  side.value = i.side || "";
+  level.value = i.level || "";
+  zone.value = i.zone || "";
+  notes.value = i.notes || "";
 }
 
+/* حذف */
 function deleteItem(id){
   if(!confirm("تأكيد الحذف؟")) return;
   fetch(API_URL,{
@@ -179,11 +191,13 @@ function deleteItem(id){
   }).then(loadItems);
 }
 
+/* تنظيف النموذج */
 function clearForm(){
   editId = null;
   document.querySelectorAll("input,textarea").forEach(e=>e.value="");
 }
 
+/* تشغيل أولي */
 loadItems();
 </script>
 

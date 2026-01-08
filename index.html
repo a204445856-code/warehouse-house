@@ -1,95 +1,102 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>مستودع البيت</title>
-
 <style>
-body{direction:rtl;font-family:Arial;background:#f4f4f4;margin:0}
-header{text-align:center;font-size:24px;padding:15px}
-.container{display:flex;gap:15px;padding:15px}
-.list,.form{background:#fff;padding:15px;border-radius:10px}
-.list{width:35%}
-.form{width:65%}
-.item{border:1px solid #ddd;padding:8px;border-radius:8px;margin-bottom:8px}
-.actions{display:flex;gap:5px;margin-top:5px}
-button{border:none;border-radius:6px;padding:5px 8px;cursor:pointer}
-.del{background:#ef4444;color:#fff}
-@media(max-width:768px){.container{flex-direction:column}.list,.form{width:100%}}
+body{font-family:tahoma;background:#f5f5f5;margin:0;padding:20px}
+.container{display:flex;gap:20px}
+.box{background:#fff;padding:15px;border-radius:10px;flex:1}
+input,select,textarea,button{width:100%;margin:5px 0;padding:8px}
+.item{border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:10px}
+img{max-width:100%;border-radius:8px;margin-top:5px}
+.btns{display:flex;gap:5px}
+.delete{background:#e74c3c;color:#fff}
+.edit{background:#f39c12;color:#fff}
 </style>
 </head>
 
 <body>
-
-<header>📦 مستودع البيت</header>
+<h2>📦 مستودع البيت</h2>
 
 <div class="container">
-  <div class="list">
-    <input id="search" placeholder="ابحث">
-    <div id="items"></div>
-  </div>
+<div class="box">
+<input id="name" placeholder="اسم الغرض">
+<select id="category">
+<option>كهرباء</option><option>مطبخ</option><option>أدوات</option>
+</select>
 
-  <div class="form">
-    <input id="name" placeholder="اسم الغرض">
-    <input id="category" placeholder="التصنيف">
-    <input id="shelf" placeholder="رقم الرف">
-    <textarea id="notes" placeholder="ملاحظات"></textarea>
-    <button onclick="save()">حفظ</button>
-    <hr>
-    <h3 id="viewName"></h3>
-  </div>
+<select id="shelf">
+<script>
+for(let i=1;i<=50;i++)document.write(`<option>${i}</option>`)
+</script>
+</select>
+
+<select id="side"><option>يمين</option><option>يسار</option></select>
+<select id="level"><option>علوي</option><option>سفلي</option></select>
+<select id="zone"><option>المخزن</option><option>المطبخ</option></select>
+
+<textarea id="notes" placeholder="ملاحظات"></textarea>
+
+<input type="file" id="image" accept="image/*" capture="environment">
+<button onclick="save()">حفظ</button>
+</div>
+
+<div class="box" id="list"></div>
 </div>
 
 <script>
-const URL="ضع_رابط_AppsScript_هنا";
-let data=[];
+const URL = "ضع_هنا_رابط_exec";
 
-function load(){
- fetch(URL).then(r=>r.json()).then(d=>{
-  data=d;
-  render(d);
- });
-}
+let items=[];
+fetch(URL).then(r=>r.json()).then(d=>{items=d;render();});
 
-function render(list){
- items.innerHTML="";
- list.forEach(i=>{
-  const div=document.createElement("div");
-  div.className="item";
-  div.innerHTML=`
-    <b>${i.name||"غرض بدون اسم"}</b> (رف ${i.shelf})
-    <div class="actions">
-      <button class="del" onclick="del(${i.id})">حذف</button>
-    </div>`;
-  div.onclick=()=>viewName.textContent=i.name;
-  items.appendChild(div);
- });
+function render(){
+list.innerHTML="";
+items.forEach((i,idx)=>{
+list.innerHTML+=`
+<div class="item">
+<b>${i.name||"غرض بدون اسم"} (رف ${i.shelf})</b>
+${i.image_url?`<img src="${i.image_url}">`:""}
+<div class="btns">
+<button class="edit" onclick="edit(${idx})">تعديل</button>
+<button class="delete" onclick="del(${idx})">حذف</button>
+</div>
+</div>`;
+});
 }
 
 function save(){
- fetch(URL,{
-  method:"POST",
-  body:JSON.stringify({
-   action:"add",
-   name:name.value,
-   category:category.value,
-   shelf:shelf.value,
-   notes:notes.value
-  })
- });
- setTimeout(load,1000);
+const file=image.files[0];
+if(file){
+const r=new FileReader();
+r.onload=()=>send(r.result.split(",")[1],file);
+r.readAsDataURL(file);
+}else send();
 }
 
-function del(id){
- if(!confirm("حذف؟"))return;
- fetch(URL,{method:"POST",body:JSON.stringify({action:"delete",id})});
- setTimeout(load,1000);
+function send(img, file){
+fetch(URL,{
+method:"POST",
+body:JSON.stringify({
+name:name.value,
+category:category.value,
+shelf:shelf.value,
+side:side.value,
+level:level.value,
+zone:zone.value,
+notes:notes.value,
+image:img,
+imageName:file?.name,
+imageType:file?.type
+})
+}).then(()=>location.reload());
 }
 
-search.oninput=()=>render(data.filter(i=>(i.name||"").includes(search.value)));
-load();
+function del(i){
+fetch(URL,{method:"POST",body:JSON.stringify({action:"delete",id:i})})
+.then(()=>location.reload());
+}
 </script>
-
 </body>
 </html>

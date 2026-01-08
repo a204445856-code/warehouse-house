@@ -6,16 +6,52 @@
 <title>مستودع البيت</title>
 
 <style>
-body{direction:rtl;font-family:Arial;background:#f4f4f4;margin:0}
-header{text-align:center;padding:20px;font-size:22px;font-weight:bold}
-.container{display:flex;gap:20px;padding:20px}
-.left,.right{background:#fff;padding:15px;border-radius:10px}
+body{
+  direction:rtl;
+  font-family:Arial;
+  background:#f4f4f4;
+  margin:0;
+}
+header{
+  text-align:center;
+  padding:20px;
+  font-size:22px;
+  font-weight:bold;
+}
+.container{
+  display:flex;
+  gap:20px;
+  padding:20px;
+}
+.left,.right{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+}
 .left{width:30%}
 .right{width:70%}
-input,textarea,select{width:100%;padding:8px;margin-bottom:8px}
-button{padding:10px;border:none;border-radius:8px;cursor:pointer}
-.save{background:#2563eb;color:#fff}
-.item{border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:8px;cursor:pointer}
+input,textarea,select{
+  width:100%;
+  padding:8px;
+  margin-bottom:8px;
+}
+button{
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+.save{
+  background:#2563eb;
+  color:#fff;
+}
+.item{
+  border:1px solid #ddd;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:8px;
+  cursor:pointer;
+}
 .item:hover{background:#f0f0f0}
 @media(max-width:768px){
   .container{flex-direction:column}
@@ -81,6 +117,7 @@ button{padding:10px;border:none;border-radius:8px;cursor:pointer}
     <button class="save" onclick="saveItem()">حفظ</button>
 
     <hr>
+
     <h3 id="viewName">اختر غرضًا</h3>
     <div id="viewDetails"></div>
 
@@ -89,44 +126,50 @@ button{padding:10px;border:none;border-radius:8px;cursor:pointer}
 </div>
 
 <script>
-// 🔹 رابط القراءة (GET)
-const GET_URL =
+const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
-
-// 🔹 رابط الحفظ (POST)
-const POST_URL = GET_URL;
 
 let items = [];
 
 function loadItems(){
-  fetch(GET_URL + "?t=" + Date.now()) // منع الكاش
+  fetch(SCRIPT_URL + "?t=" + Date.now())
     .then(res => res.json())
     .then(data => {
-      items = data.filter(i => i.name && i.name.trim() !== "");
+      items = data;
       render(items);
     });
 }
 
 function render(list){
   itemsList.innerHTML = "";
-  list.forEach((item, i) => {
+  list.forEach((item, index) => {
+    const name =
+      item.name && item.name.trim() !== ""
+        ? item.name
+        : "غرض بدون اسم";
+
     const div = document.createElement("div");
     div.className = "item";
-    div.textContent = item.name + " (رف " + item.shelf + ")";
-    div.onclick = () => showItem(i);
+    div.textContent = name + " (رف " + item.shelf + ")";
+    div.onclick = () => showItem(index);
     itemsList.appendChild(div);
   });
 }
 
 function showItem(i){
   const item = items[i];
-  viewName.textContent = item.name;
+  const name =
+    item.name && item.name.trim() !== ""
+      ? item.name
+      : "غرض بدون اسم";
+
+  viewName.textContent = name;
   viewDetails.innerHTML = `
-    <div>التصنيف: ${item.category}</div>
-    <div>الرف: ${item.shelf}</div>
-    <div>الجهة: ${item.side}</div>
-    <div>المستوى: ${item.level}</div>
-    <div>المنطقة: ${item.zone}</div>
+    <div>التصنيف: ${item.category || "-"}</div>
+    <div>الرف: ${item.shelf || "-"}</div>
+    <div>الجهة: ${item.side || "-"}</div>
+    <div>المستوى: ${item.level || "-"}</div>
+    <div>المنطقة: ${item.zone || "-"}</div>
     <div>ملاحظات: ${item.notes || "-"}</div>
   `;
 }
@@ -139,10 +182,11 @@ function saveItem(){
     side: side.value,
     level: level.value,
     zone: zone.value,
-    notes: notes.value
+    notes: notes.value,
+    image_url: ""
   };
 
-  fetch(POST_URL,{
+  fetch(SCRIPT_URL,{
     method:"POST",
     mode:"no-cors",
     headers:{ "Content-Type":"application/json" },
@@ -150,16 +194,19 @@ function saveItem(){
   });
 
   alert("✅ تم حفظ الغرض");
-  document.querySelectorAll("input, textarea, select").forEach(e=>e.value="");
 
-  setTimeout(loadItems, 1200); // ⬅️ مهم
+  document.querySelectorAll("input, textarea, select").forEach(e => e.value = "");
+  setTimeout(loadItems, 1200);
 }
 
 search.oninput = () => {
   const v = search.value.trim();
-  render(items.filter(i =>
-    i.name.includes(v) || String(i.shelf).includes(v)
-  ));
+  render(
+    items.filter(i =>
+      (i.name || "").includes(v) ||
+      String(i.shelf || "").includes(v)
+    )
+  );
 };
 
 loadItems();

@@ -3,100 +3,209 @@
 <head>
 <meta charset="UTF-8">
 <title>مستودع البيت</title>
+
 <style>
-body{font-family:tahoma;background:#f5f5f5;margin:0;padding:20px}
-.container{display:flex;gap:20px}
-.box{background:#fff;padding:15px;border-radius:10px;flex:1}
-input,select,textarea,button{width:100%;margin:5px 0;padding:8px}
-.item{border:1px solid #ddd;padding:10px;border-radius:8px;margin-bottom:10px}
-img{max-width:100%;border-radius:8px;margin-top:5px}
-.btns{display:flex;gap:5px}
-.delete{background:#e74c3c;color:#fff}
-.edit{background:#f39c12;color:#fff}
+body{
+  font-family: Tahoma;
+  background:#f3f3f3;
+  margin:0;
+  padding:20px
+}
+h1{text-align:center}
+.container{
+  display:flex;
+  gap:20px
+}
+.card{
+  background:#fff;
+  border-radius:10px;
+  padding:15px;
+  flex:1
+}
+input,select,textarea,button{
+  width:100%;
+  padding:8px;
+  margin:5px 0
+}
+button{
+  background:#2d6cdf;
+  color:#fff;
+  border:none;
+  border-radius:6px
+}
+.item{
+  border:1px solid #ddd;
+  padding:10px;
+  border-radius:8px;
+  margin-bottom:10px;
+  cursor:pointer
+}
+.item img{
+  max-width:100%;
+  margin-top:8px;
+  border-radius:6px
+}
+.actions{
+  display:flex;
+  gap:5px;
+  margin-top:5px
+}
+.edit{background:#f39c12}
+.delete{background:#e74c3c}
 </style>
 </head>
 
 <body>
-<h2>📦 مستودع البيت</h2>
+
+<h1>📦 مستودع البيت</h1>
 
 <div class="container">
-<div class="box">
-<input id="name" placeholder="اسم الغرض">
-<select id="category">
-<option>كهرباء</option><option>مطبخ</option><option>أدوات</option>
-</select>
 
-<select id="shelf">
-<script>
-for(let i=1;i<=50;i++)document.write(`<option>${i}</option>`)
-</script>
-</select>
+<!-- النموذج -->
+<div class="card">
+  <input id="name" placeholder="اسم الغرض">
 
-<select id="side"><option>يمين</option><option>يسار</option></select>
-<select id="level"><option>علوي</option><option>سفلي</option></select>
-<select id="zone"><option>المخزن</option><option>المطبخ</option></select>
+  <select id="category">
+    <option value="">التصنيف</option>
+    <option>كهرباء</option>
+    <option>مطبخ</option>
+    <option>أدوات</option>
+  </select>
 
-<textarea id="notes" placeholder="ملاحظات"></textarea>
+  <select id="shelf">
+    <option value="">رقم الرف</option>
+    <script>
+      for(let i=1;i<=50;i++)
+        document.write(`<option>${i}</option>`);
+    </script>
+  </select>
 
-<input type="file" id="image" accept="image/*" capture="environment">
-<button onclick="save()">حفظ</button>
+  <select id="side">
+    <option value="">الجهة</option>
+    <option>يمين</option>
+    <option>يسار</option>
+  </select>
+
+  <select id="level">
+    <option value="">المستوى</option>
+    <option>علوي</option>
+    <option>سفلي</option>
+  </select>
+
+  <select id="zone">
+    <option value="">المنطقة</option>
+    <option>المخزن</option>
+    <option>المطبخ</option>
+  </select>
+
+  <textarea id="notes" placeholder="ملاحظات"></textarea>
+
+  <!-- زر الصورة (كاميرا الجوال) -->
+  <input type="file" id="image" accept="image/*" capture="environment">
+
+  <button onclick="save()">حفظ</button>
 </div>
 
-<div class="box" id="list"></div>
+<!-- القائمة -->
+<div class="card">
+  <input id="search" placeholder="بحث بالاسم أو رقم الرف">
+  <div id="list"></div>
+</div>
+
 </div>
 
 <script>
-const URL = "ضع_هنا_رابط_exec";
+const URL = "ضع_رابط_exec_هنا";
 
 let items=[];
-fetch(URL).then(r=>r.json()).then(d=>{items=d;render();});
+
+function load(){
+  fetch(URL)
+  .then(r=>r.json())
+  .then(d=>{
+    items=d;
+    render();
+  });
+}
 
 function render(){
-list.innerHTML="";
-items.forEach((i,idx)=>{
-list.innerHTML+=`
-<div class="item">
-<b>${i.name||"غرض بدون اسم"} (رف ${i.shelf})</b>
-${i.image_url?`<img src="${i.image_url}">`:""}
-<div class="btns">
-<button class="edit" onclick="edit(${idx})">تعديل</button>
-<button class="delete" onclick="del(${idx})">حذف</button>
-</div>
-</div>`;
-});
+  list.innerHTML="";
+  items.forEach((i,idx)=>{
+    list.innerHTML+=`
+      <div class="item" onclick="show(${idx})">
+        <b>${i.name || "غرض بدون اسم"} (رف ${i.shelf})</b>
+
+        <div class="actions">
+          <button class="edit" onclick="event.stopPropagation();edit(${idx})">تعديل</button>
+          <button class="delete" onclick="event.stopPropagation();del(${idx})">حذف</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function show(i){
+  const it = items[i];
+  name.value=it.name;
+  category.value=it.category;
+  shelf.value=it.shelf;
+  side.value=it.side;
+  level.value=it.level;
+  zone.value=it.zone;
+  notes.value=it.notes;
+
+  if(it.image_url){
+    alert("الصورة ستفتح في نافذة جديدة");
+    window.open(it.image_url);
+  }
 }
 
 function save(){
-const file=image.files[0];
-if(file){
-const r=new FileReader();
-r.onload=()=>send(r.result.split(",")[1],file);
-r.readAsDataURL(file);
-}else send();
+  const file=image.files[0];
+  if(file){
+    const r=new FileReader();
+    r.onload=()=>send(r.result.split(",")[1],file);
+    r.readAsDataURL(file);
+  }else{
+    send();
+  }
 }
 
-function send(img, file){
-fetch(URL,{
-method:"POST",
-body:JSON.stringify({
-name:name.value,
-category:category.value,
-shelf:shelf.value,
-side:side.value,
-level:level.value,
-zone:zone.value,
-notes:notes.value,
-image:img,
-imageName:file?.name,
-imageType:file?.type
-})
-}).then(()=>location.reload());
+function send(img,file){
+  fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({
+      name:name.value,
+      category:category.value,
+      shelf:shelf.value,
+      side:side.value,
+      level:level.value,
+      zone:zone.value,
+      notes:notes.value,
+      image:img,
+      imageName:file?.name,
+      imageType:file?.type
+    })
+  }).then(()=>location.reload());
 }
 
 function del(i){
-fetch(URL,{method:"POST",body:JSON.stringify({action:"delete",id:i})})
-.then(()=>location.reload());
+  if(!confirm("هل تريد الحذف؟"))return;
+  fetch(URL,{
+    method:"POST",
+    body:JSON.stringify({action:"delete",row:i+2})
+  }).then(()=>location.reload());
 }
+
+search.oninput=()=>{
+  const v=search.value;
+  render(items.filter(i=>
+    (i.name||"").includes(v) || (""+i.shelf).includes(v)
+  ));
+};
+
+load();
 </script>
+
 </body>
 </html>

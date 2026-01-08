@@ -2,85 +2,96 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>إدارة المستودع</title>
+  <title>نظام إدارة المستودع</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       direction: rtl;
-      background: #f5f5f5;
+      background: #f4f6f8;
       padding: 20px;
     }
     h1 {
       text-align: center;
+      margin-bottom: 20px;
     }
-    .form-container {
-      background: #fff;
-      padding: 20px;
-      max-width: 500px;
+    .container {
+      background: #ffffff;
+      max-width: 600px;
       margin: auto;
+      padding: 20px;
       border-radius: 8px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
     label {
-      display: block;
       margin-top: 10px;
+      display: block;
+      font-weight: bold;
     }
-    input, textarea, button {
+    input, textarea {
       width: 100%;
       padding: 8px;
       margin-top: 5px;
-      font-size: 14px;
+      box-sizing: border-box;
     }
     button {
+      margin-top: 20px;
+      width: 100%;
+      padding: 10px;
       background: #2e86de;
-      color: white;
+      color: #fff;
       border: none;
       border-radius: 5px;
-      margin-top: 15px;
+      font-size: 16px;
       cursor: pointer;
     }
     button:hover {
-      background: #1b4f72;
+      background: #1e5fa3;
     }
   </style>
 </head>
 <body>
 
-  <h1>نظام إدارة المستودع</h1>
+<h1>إدارة المستودع</h1>
 
-  <div class="form-container">
-    <label>اسم الصنف</label>
-    <input type="text" id="name">
+<div class="container">
+  <label>اسم الصنف</label>
+  <input type="text" id="name">
 
-    <label>الفئة</label>
-    <input type="text" id="category">
+  <label>التصنيف</label>
+  <input type="text" id="category">
 
-    <label>الرف</label>
-    <input type="text" id="shelf">
+  <label>رقم الرف</label>
+  <input type="text" id="shelf">
 
-    <label>الدور</label>
-    <input type="text" id="floor">
+  <label>الجهة</label>
+  <input type="text" id="side">
 
-    <label>المنطقة</label>
-    <input type="text" id="area">
+  <label>المستوى</label>
+  <input type="text" id="level">
 
-    <label>ملاحظات</label>
-    <textarea id="notes"></textarea>
+  <label>المنطقة</label>
+  <input type="text" id="zone">
 
-    <button onclick="saveItem()">حفظ</button>
-  </div>
+  <label>ملاحظات</label>
+  <textarea id="notes"></textarea>
+
+  <button onclick="saveItem()">حفظ</button>
+</div>
 
 <script>
-const scriptURL = "https://script.google.com/macros/s/AKfycbxkCtxsn6NTZdLu-pslaKK3wfxC8rAD00RuCl_NF0Yq58zY73nYOw-2marle2tmJ8Pw/exec";
+const scriptURL =
+"https://script.google.com/macros/s/AKfycbwTqZ7DEzN_Ct-aDoeLmKS2HgzZIhAPwte2glHAu3yXj5H8rL6zLo7hGyod4Pt-Lqqd/exec";
 
 function saveItem() {
   const data = {
     name: document.getElementById("name").value,
     category: document.getElementById("category").value,
     shelf: document.getElementById("shelf").value,
-    floor: document.getElementById("floor").value,
-    area: document.getElementById("area").value,
-    notes: document.getElementById("notes").value
+    side: document.getElementById("side").value,
+    level: document.getElementById("level").value,
+    zone: document.getElementById("zone").value,
+    notes: document.getElementById("notes").value,
+    image_url: ""
   };
 
   fetch(scriptURL, {
@@ -90,13 +101,13 @@ function saveItem() {
     },
     body: JSON.stringify(data)
   })
-  .then(response => response.json())
+  .then(res => res.json())
   .then(() => {
     alert("✅ تم حفظ البيانات بنجاح");
     document.querySelectorAll("input, textarea").forEach(el => el.value = "");
   })
-  .catch(error => {
-    console.error(error);
+  .catch(err => {
+    console.error(err);
     alert("❌ حدث خطأ أثناء الحفظ");
   });
 }

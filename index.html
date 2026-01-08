@@ -8,22 +8,18 @@
 body {
   direction: rtl;
   font-family: Arial;
-  background: #f3f3f3;
+  background: #f4f6f8;
   margin: 0;
 }
-h2 {
-  text-align: center;
+.header {
   padding: 15px;
+  font-size: 22px;
+  font-weight: bold;
 }
 .container {
   display: flex;
   gap: 20px;
-  padding: 20px;
-}
-.left, .right {
-  background: #fff;
   padding: 15px;
-  border-radius: 8px;
 }
 .left {
   width: 30%;
@@ -31,69 +27,90 @@ h2 {
 .right {
   width: 70%;
 }
-ul {
-  list-style: none;
-  padding: 0;
+.card {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
 }
-li {
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
+.item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.item:hover {
+  background: #f0f0f0;
+}
+button {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
   cursor: pointer;
 }
-li:hover {
-  background: #f0f0f0;
+.delete {
+  background: #ef4444;
+  color: #fff;
+}
+.edit {
+  background: #f59e0b;
+  color: #fff;
 }
 input, textarea {
   width: 100%;
   padding: 6px;
   margin: 5px 0;
 }
-button {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 6px;
+.save {
   background: #2563eb;
   color: #fff;
-  cursor: pointer;
 }
 img {
   max-width: 100%;
   margin-top: 10px;
-  border-radius: 6px;
-}
-.label {
-  font-weight: bold;
-  margin-top: 6px;
+  border-radius: 8px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📦 مستودع البيت</h2>
+<div class="header">📦 مستودع البيت</div>
 
 <div class="container">
 
   <!-- القائمة -->
   <div class="left">
-    <h3>الأغراض</h3>
-    <ul id="itemsList"></ul>
+    <div class="card">
+      <input placeholder="ابحث بالاسم أو رقم الرف">
+      <div id="itemsList"></div>
+    </div>
   </div>
 
   <!-- التفاصيل -->
   <div class="right">
-    <h3 id="itemName">اختر غرضًا</h3>
+    <div class="card">
+      <input id="name" placeholder="اسم الغرض">
+      <input id="category" placeholder="التصنيف">
+      <input id="shelf" placeholder="رقم الرف">
+      <input id="side" placeholder="الجهة">
+      <input id="level" placeholder="المستوى">
+      <input id="zone" placeholder="المنطقة">
+      <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-    <div class="label">التصنيف:</div>
-    <div id="itemCategory"></div>
+      <input id="image_url" placeholder="رابط الصورة (اختياري)">
 
-    <div class="label">المكان:</div>
-    <div id="itemLocation"></div>
+      <button class="save" type="button" onclick="saveItem()">حفظ</button>
 
-    <div class="label">ملاحظات:</div>
-    <div id="itemNotes"></div>
+      <hr>
 
-    <img id="itemImage" style="display:none;">
+      <h3 id="viewName">اختر غرضًا</h3>
+      <p id="viewLocation"></p>
+      <p id="viewNotes"></p>
+      <img id="viewImage" style="display:none;">
+    </div>
   </div>
 
 </div>
@@ -102,38 +119,68 @@ img {
 const scriptURL =
 "https://script.google.com/macros/s/AKfycbxqbICXqRgJ7OT8WFQH9cd-6lFN75vONOR-Fzrf87w2Mt_g1dBfkZhZ6UPyvbSrAZ49/exec";
 
-let allItems = [];
+let items = [];
 
 function loadItems() {
   fetch(scriptURL)
     .then(r => r.json())
     .then(data => {
-      allItems = data;
+      items = data;
       itemsList.innerHTML = "";
       data.forEach((item, index) => {
-        const li = document.createElement("li");
-        li.textContent = item.name;
-        li.onclick = () => showItem(index);
-        itemsList.appendChild(li);
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <span>${item.name}</span>
+          <span>رف ${item.shelf}</span>
+        `;
+        div.onclick = () => showItem(index);
+        itemsList.appendChild(div);
       });
     });
 }
 
 function showItem(index) {
-  const item = allItems[index];
+  const i = items[index];
+  viewName.textContent = i.name;
+  viewLocation.textContent = `الموقع: رف ${i.shelf} – ${i.zone}`;
+  viewNotes.textContent = i.notes || "";
 
-  itemName.textContent = item.name;
-  itemCategory.textContent = item.category || "-";
-  itemLocation.textContent =
-    `رف ${item.shelf} – ${item.zone}`;
-  itemNotes.textContent = item.notes || "-";
-
-  if (item.image_url) {
-    itemImage.src = item.image_url;
-    itemImage.style.display = "block";
+  if (i.image_url) {
+    viewImage.src = i.image_url;
+    viewImage.style.display = "block";
   } else {
-    itemImage.style.display = "none";
+    viewImage.style.display = "none";
   }
+}
+
+function saveItem() {
+  const data = {
+    name: name.value,
+    category: category.value,
+    shelf: shelf.value,
+    side: side.value,
+    level: level.value,
+    zone: zone.value,
+    notes: notes.value,
+    image_url: image_url.value
+  };
+
+  fetch(scriptURL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  alert("✅ تم حفظ الغرض في السحابة");
+
+  clearForm();
+  setTimeout(loadItems, 1000);
+}
+
+function clearForm() {
+  document.querySelectorAll("input, textarea").forEach(e => e.value = "");
 }
 
 loadItems();

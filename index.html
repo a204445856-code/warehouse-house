@@ -75,7 +75,6 @@
 
 <div class="container">
 
-  <!-- النموذج -->
   <div class="card form">
     <input id="name" placeholder="اسم الغرض">
     <input id="category" placeholder="التصنيف">
@@ -88,35 +87,25 @@
     <button class="save" onclick="saveItem()">حفظ</button>
   </div>
 
-  <!-- القائمة -->
-  <div class="card list" id="itemsList">
-    جاري التحميل...
-  </div>
+  <div class="card list" id="itemsList">جاري التحميل...</div>
 
 </div>
 
 <script>
-/* رابط Google Apps Script */
 const API_URL = "https://script.google.com/macros/s/AKfycbyM_6gt_OtA7wKzeKybEnyXRdvD32R-aMZ90gXks1MNlB_K6d-APnymh_Xr8WsnFlYV/exec";
 
 let items = [];
 let editId = null;
 
-/* تحميل البيانات */
 function loadItems(){
   fetch(API_URL)
-    .then(r => r.json())
-    .then(data => {
-      items = data;
+    .then(r=>r.json())
+    .then(d=>{
+      items = d;
       render();
-    })
-    .catch(err=>{
-      document.getElementById("itemsList").innerText = "خطأ في تحميل البيانات";
-      console.error(err);
     });
 }
 
-/* عرض القائمة */
 function render(){
   const box = document.getElementById("itemsList");
   box.innerHTML = "";
@@ -130,9 +119,7 @@ function render(){
     const div = document.createElement("div");
     div.className = "item";
     div.innerHTML = `
-      <div class="item-title">
-        ${i.name || "بدون اسم"} (رف ${i.shelf || "-"})
-      </div>
+      <div class="item-title">${i.name || "بدون اسم"} (رف ${i.shelf})</div>
       <div>${i.category || ""}</div>
       <div class="row">
         <button class="edit" onclick="editItem(${i.id})">تعديل</button>
@@ -143,17 +130,15 @@ function render(){
   });
 }
 
-/* حفظ / تعديل */
 function saveItem(){
-  const name = document.getElementById("name").value.trim();
-  if(!name){
-    alert("يرجى كتابة اسم الغرض");
+  if(!name.value.trim()){
+    alert("اكتب اسم الغرض");
     return;
   }
 
   const data = {
     id: editId,
-    name: name,
+    name: name.value,
     category: category.value,
     shelf: shelf.value,
     side: side.value,
@@ -164,27 +149,16 @@ function saveItem(){
 
   fetch(API_URL,{
     method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
+    mode:"no-cors",
     body: JSON.stringify(data)
-  })
-  .then(r=>r.json())
-  .then(()=>{
-    clearForm();
-    loadItems();
-  })
-  .catch(err=>{
-    alert("خطأ أثناء الحفظ");
-    console.error(err);
   });
+
+  clearForm();
+  setTimeout(loadItems, 2000);
 }
 
-/* تحميل بيانات للتعديل */
 function editItem(id){
   const i = items.find(x=>x.id==id);
-  if(!i) return;
-
   editId = id;
   name.value = i.name;
   category.value = i.category;
@@ -195,28 +169,23 @@ function editItem(id){
   notes.value = i.notes;
 }
 
-/* حذف */
 function deleteItem(id){
   if(!confirm("تأكيد الحذف؟")) return;
 
   fetch(API_URL,{
     method:"POST",
-    headers:{
-      "Content-Type":"application/json"
-    },
+    mode:"no-cors",
     body: JSON.stringify({delete:true,id})
-  })
-  .then(r=>r.json())
-  .then(loadItems);
+  });
+
+  setTimeout(loadItems, 2000);
 }
 
-/* مسح النموذج */
 function clearForm(){
   editId = null;
   document.querySelectorAll("input,textarea").forEach(e=>e.value="");
 }
 
-/* تشغيل */
 loadItems();
 </script>
 

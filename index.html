@@ -1,72 +1,22 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8">
-  <title>مستودع البيت</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-
-  <style>
-    body{
-      font-family: Arial, sans-serif;
-      background:#f5f6f7;
-      margin:0;
-      padding:0;
-    }
-    h1{
-      text-align:center;
-      padding:20px;
-    }
-    .container{
-      display:flex;
-      gap:15px;
-      padding:15px;
-      flex-wrap:wrap;
-    }
-    .card{
-      background:#fff;
-      border-radius:8px;
-      padding:15px;
-      box-shadow:0 2px 6px rgba(0,0,0,.1);
-    }
-    .form{
-      flex:1;
-      min-width:280px;
-    }
-    .list{
-      flex:1;
-      min-width:280px;
-      max-height:80vh;
-      overflow:auto;
-    }
-    input, textarea, button{
-      width:100%;
-      margin-bottom:10px;
-      padding:8px;
-      font-size:14px;
-    }
-    button{
-      cursor:pointer;
-      border:none;
-      border-radius:5px;
-    }
-    .save{background:#2563eb;color:#fff}
-    .delete{background:#ef4444;color:#fff}
-    .edit{background:#f59e0b;color:#fff}
-    .item{
-      border:1px solid #ddd;
-      padding:10px;
-      border-radius:6px;
-      margin-bottom:10px;
-    }
-    .item-title{
-      font-weight:bold;
-      margin-bottom:5px;
-    }
-    .row{
-      display:flex;
-      gap:5px;
-    }
-  </style>
+<meta charset="UTF-8">
+<title>مستودع البيت</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body{font-family:Arial;background:#f5f6f7;margin:0}
+h1{text-align:center;padding:15px}
+.container{display:flex;gap:15px;padding:15px;flex-wrap:wrap}
+.card{background:#fff;border-radius:8px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
+.form,.list{flex:1;min-width:280px}
+.item{border:1px solid #ddd;border-radius:6px;padding:10px;margin-bottom:10px}
+img{max-width:100%;border-radius:6px;margin-top:5px}
+button{padding:8px;border:none;border-radius:5px;cursor:pointer}
+.save{background:#2563eb;color:#fff;width:100%}
+.delete{background:#ef4444;color:#fff}
+.edit{background:#f59e0b;color:#fff}
+</style>
 </head>
 
 <body>
@@ -75,137 +25,101 @@
 
 <div class="container">
 
-  <!-- نموذج الإدخال -->
-  <div class="card form">
-    <input id="name" placeholder="اسم الغرض">
-    <input id="category" placeholder="التصنيف">
-    <input id="shelf" type="number" placeholder="رقم الرف">
-    <input id="side" placeholder="الجهة">
-    <input id="level" placeholder="المستوى">
-    <input id="zone" placeholder="المنطقة">
-    <textarea id="notes" placeholder="ملاحظات"></textarea>
+<div class="card form">
+<input id="name" placeholder="اسم الغرض">
+<input id="category" placeholder="التصنيف">
+<input id="shelf" type="number" placeholder="رقم الرف">
+<input id="side" placeholder="الجهة">
+<input id="level" placeholder="المستوى">
+<input id="zone" placeholder="المنطقة">
+<textarea id="notes" placeholder="ملاحظات"></textarea>
+<input type="file" id="image" accept="image/*">
+<button class="save" onclick="save()">حفظ</button>
+</div>
 
-    <button class="save" onclick="saveItem()">💾 حفظ</button>
-  </div>
-
-  <!-- قائمة الأغراض -->
-  <div class="card list" id="itemsList">
-    جاري التحميل...
-  </div>
+<div class="card list" id="list">جاري التحميل...</div>
 
 </div>
 
 <script>
-/* رابط Google Apps Script */
-const API_URL = "https://script.google.com/macros/s/AKfycbz8GKmEkmzOj_WrqCou9O9gpY7qBNL0TwcMU4Y1eeKSW8cH-QFPRIRcH-yTUwvW1K-9/exec";
+const API_URL =https://script.google.com/macros/s/AKfycbxqI8JJl7TaPu_8R8mzWJMYML3baWLByr1xb4hetsdriUhGlvnD4JERCyNDtt9FLZw/exec;
 
-let items = [];
-let editId = null;
+let items=[], editId=null;
 
-/* تحميل البيانات */
-function loadItems(){
-  fetch(API_URL)
-    .then(r => r.json())
-    .then(data => {
-      items = data;
-      render();
-    })
-    .catch(()=>{
-      document.getElementById("itemsList").innerText = "تعذر تحميل البيانات";
-    });
+function load(){
+ fetch(API_URL).then(r=>r.json()).then(d=>{
+  items=d; render();
+ });
 }
 
-/* عرض القائمة */
 function render(){
-  const box = document.getElementById("itemsList");
-  box.innerHTML = "";
-
-  if(items.length === 0){
-    box.innerHTML = "لا توجد أغراض";
-    return;
-  }
-
-  items.slice().reverse().forEach(i=>{
-    const div = document.createElement("div");
-    div.className = "item";
-    div.innerHTML = `
-      <div class="item-title">
-        ${i.name || "بدون اسم"} (رف ${i.shelf || "-"})
-      </div>
-      <div>${i.category || ""}</div>
-      <div class="row">
-        <button class="edit" onclick="editItem(${i.id})">✏️ تعديل</button>
-        <button class="delete" onclick="deleteItem(${i.id})">🗑️ حذف</button>
-      </div>
-    `;
-    box.appendChild(div);
-  });
+ const box=document.getElementById("list");
+ box.innerHTML="";
+ items.slice().reverse().forEach(i=>{
+  box.innerHTML+=`
+   <div class="item">
+    <b>${i.name||"بدون اسم"}</b> (رف ${i.shelf||"-"})
+    ${i.image_url?`<img src="${i.image_url}">`:""}
+    <div>
+     <button class="edit" onclick="edit(${i.id})">تعديل</button>
+     <button class="delete" onclick="del(${i.id})">حذف</button>
+    </div>
+   </div>`;
+ });
 }
 
-/* حفظ / تعديل */
-function saveItem(){
-  if(!name.value.trim()){
-    alert("يرجى كتابة اسم الغرض");
-    return;
-  }
-
-  const data = {
-    id: editId,
-    name: name.value,
-    category: category.value,
-    shelf: shelf.value,
-    side: side.value,
-    level: level.value,
-    zone: zone.value,
-    notes: notes.value
-  };
-
-  fetch(API_URL,{
-    method:"POST",
-    mode:"no-cors",
-    body: JSON.stringify(data)
-  });
-
-  clearForm();
-  setTimeout(loadItems, 2000);
+function save(){
+ const file=document.getElementById("image").files[0];
+ if(file){
+  const r=new FileReader();
+  r.onload=()=>send(r.result,file);
+  r.readAsDataURL(file);
+ }else send();
 }
 
-/* تحميل بيانات للتعديل */
-function editItem(id){
-  const i = items.find(x=>x.id==id);
-  if(!i) return;
-
-  editId = id;
-  name.value = i.name || "";
-  category.value = i.category || "";
-  shelf.value = i.shelf || "";
-  side.value = i.side || "";
-  level.value = i.level || "";
-  zone.value = i.zone || "";
-  notes.value = i.notes || "";
+function send(img,file){
+ fetch(API_URL,{
+  method:"POST",
+  body:JSON.stringify({
+   id:editId,
+   name:name.value,
+   category:category.value,
+   shelf:shelf.value,
+   side:side.value,
+   level:level.value,
+   zone:zone.value,
+   notes:notes.value,
+   image:img||"",
+   imageName:file?file.name:"",
+   imageType:file?file.type:""
+  })
+ }).then(()=>{clear();load();});
 }
 
-/* حذف */
-function deleteItem(id){
-  if(!confirm("تأكيد الحذف؟")) return;
-
-  fetch(API_URL,{
-    method:"POST",
-    mode:"no-cors",
-    body: JSON.stringify({delete:true,id})
-  });
-
-  setTimeout(loadItems, 2000);
+function edit(id){
+ const i=items.find(x=>x.id==id);
+ editId=id;
+ name.value=i.name;
+ category.value=i.category;
+ shelf.value=i.shelf;
+ side.value=i.side;
+ level.value=i.level;
+ zone.value=i.zone;
+ notes.value=i.notes;
 }
 
-/* مسح النموذج */
-function clearForm(){
-  editId = null;
-  document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+function del(id){
+ if(!confirm("حذف؟"))return;
+ fetch(API_URL,{method:"POST",body:JSON.stringify({delete:true,id})})
+ .then(load);
 }
 
-/* تشغيل أولي */
-loadItems();
+function clear(){
+ editId=null;
+ document.querySelectorAll("input,textarea").forEach(e=>e.value="");
+}
+
+load();
 </script>
 
 </body>

@@ -92,7 +92,73 @@
 </div>
 
 <script>
-const API_URL = "https://script.google.com/macros/s/AKfycbyM_6gt_OtA7wKzeKybEnyXRdvD32R-aMZ90gXks1MNlB_K6d-APnymh_Xr8WsnFlYV/exec";
+const API_URL = "const SHEET_NAME = "items";
+
+function doGet() {
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  const data = sh.getDataRange().getValues();
+  const headers = data.shift();
+
+  const items = data.map(r=>{
+    let o = {};
+    headers.forEach((h,i)=>o[h]=r[i]);
+    return o;
+  });
+
+  return ContentService
+    .createTextOutput(JSON.stringify(items))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e){
+  const sh = SpreadsheetApp.getActive().getSheetByName(SHEET_NAME);
+  const body = JSON.parse(e.postData.contents);
+
+  if(body.delete){
+    const rows = sh.getDataRange().getValues();
+    for(let i=1;i<rows.length;i++){
+      if(rows[i][0]==body.id){
+        sh.deleteRow(i+1);
+        break;
+      }
+    }
+    return ok();
+  }
+
+  const id = body.id || Date.now();
+
+  const row = [
+    id,
+    body.name || "",
+    body.category || "",
+    body.shelf || "",
+    body.side || "",
+    body.level || "",
+    body.zone || "",
+    body.notes || "",
+    new Date(),
+    ""
+  ];
+
+  if(body.id){
+    const rows = sh.getDataRange().getValues();
+    for(let i=1;i<rows.length;i++){
+      if(rows[i][0]==body.id){
+        sh.getRange(i+1,1,1,row.length).setValues([row]);
+        break;
+      }
+    }
+  }else{
+    sh.appendRow(row);
+  }
+
+  return ok();
+}
+
+function ok(){
+  return ContentService.createTextOutput("ok");
+}
+";
 
 let items = [];
 let editId = null;

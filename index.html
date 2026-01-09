@@ -74,32 +74,44 @@ button{
 <div class="card">
   <h3>إضافة / تعديل غرض</h3>
 
-  <input id="itemName" placeholder="اسم الغرض">
+  <!-- 🔑 النموذج الحقيقي -->
+  <form id="itemForm"
+        action="https://script.google.com/macros/s/AKfycbyOEyeIgyvubIw5A3dpWIC93eLs3Zn9EJ7o5hJhqPgBYfJy84lYIcKRay7bXUoB7W61/exec"
+        method="POST"
+        enctype="multipart/form-data"
+        target="hiddenFrame"
+        onsubmit="afterSubmit()">
 
-  <select id="category">
-    <option value="">المنطقة / القسم</option>
-    <option>مستودع يمين</option>
-    <option>مستودع يسار</option>
-    <option>مطبخ</option>
-    <option>صالة</option>
-    <option>غرفة البنات</option>
-    <option>غرفة الأولاد</option>
-    <option>غرفة النوم</option>
-  </select>
+    <input name="name" id="itemName" placeholder="اسم الغرض" required>
 
-  <select id="shelf"><option value="">رقم الرف</option></select>
+    <select name="category" id="category">
+      <option value="">المنطقة / القسم</option>
+      <option>مستودع يمين</option>
+      <option>مستودع يسار</option>
+      <option>مطبخ</option>
+      <option>صالة</option>
+      <option>غرفة البنات</option>
+      <option>غرفة الأولاد</option>
+      <option>غرفة النوم</option>
+    </select>
 
-  <select id="level">
-    <option value="">المستوى</option>
-    <option>أعلى</option>
-    <option>وسط</option>
-    <option>أسفل</option>
-  </select>
+    <select name="shelf" id="shelf"><option value="">رقم الرف</option></select>
 
-  <textarea id="notes" placeholder="ملاحظات"></textarea>
-  <input type="file" id="image">
+    <select name="level" id="level">
+      <option value="">المستوى</option>
+      <option>أعلى</option>
+      <option>وسط</option>
+      <option>أسفل</option>
+    </select>
 
-  <button onclick="saveItem()">حفظ</button>
+    <textarea name="notes" id="notes" placeholder="ملاحظات"></textarea>
+    <input type="file" name="image" id="image" accept="image/*">
+
+    <button type="submit">حفظ</button>
+  </form>
+
+  <!-- iframe مخفي -->
+  <iframe name="hiddenFrame" style="display:none"></iframe>
 </div>
 
 </div>
@@ -115,14 +127,21 @@ button{
 
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbx5f12a2P9S51SUIjtxQ-PTKs1KJJZks8sbYJRfrXRbGdQb5QHib6f4sFcvGkzccgWv/exec";
+"https://script.google.com/macros/s/AKfycbyOEyeIgyvubIw5A3dpWIC93eLs3Zn9EJ7o5hJhqPgBYfJy84lYIcKRay7bXUoB7W61/exec";
 
 let ITEMS=[];
-let CURRENT_INDEX=null;
 
 /* الأرفف */
 for(let i=1;i<=100;i++){
   shelf.innerHTML+=`<option>${i}</option>`;
+}
+
+/* بعد الحفظ */
+function afterSubmit(){
+  setTimeout(()=>{
+    itemForm.reset();
+    loadItems();
+  },1500);
 }
 
 /* تحميل */
@@ -143,10 +162,10 @@ function renderItems(arr){
     items.innerHTML+=`
       <div class="item">
         ${i.image ? `<img src="${i.image}">` : ``}
-        <div class="item-name" onclick="editItem(${idx})">${i.name}</div>
+        <div class="item-name" onclick="fillForm(${idx})">${i.name}</div>
         <div class="item-actions">
-          <span onclick="editItem(${idx})">✏️</span>
-          <span onclick="deleteItem(${idx})">🗑️</span>
+          <span onclick="fillForm(${idx})">✏️</span>
+          <span onclick="removeUI(${idx})">🗑️</span>
         </div>
       </div>
     `;
@@ -154,9 +173,8 @@ function renderItems(arr){
 }
 
 /* تعبئة النموذج */
-function editItem(index){
+function fillForm(index){
   const i=ITEMS[index];
-  CURRENT_INDEX=index;
   itemName.value=i.name;
   category.value=i.category;
   shelf.value=i.shelf;
@@ -165,8 +183,8 @@ function editItem(index){
 }
 
 /* حذف (واجهة فقط) */
-function deleteItem(index){
-  if(!confirm("هل تريدين حذف الغرض؟")) return;
+function removeUI(index){
+  if(!confirm("حذف من الواجهة فقط؟")) return;
   ITEMS.splice(index,1);
   renderItems(ITEMS);
 }
@@ -183,7 +201,7 @@ function openGallery(){
   ITEMS.forEach((i,idx)=>{
     if(i.image){
       galleryImages.innerHTML+=`
-        <img src="${i.image}" onclick="editItem(${idx});closeGallery()">
+        <img src="${i.image}" onclick="fillForm(${idx});closeGallery()">
       `;
     }
   });
@@ -191,34 +209,6 @@ function openGallery(){
 }
 function closeGallery(){
   galleryScreen.style.display="none";
-}
-
-/* حفظ */
-async function saveItem(){
-  const name=itemName.value.trim();
-  if(!name){
-    alert("اسم الغرض مطلوب");
-    return;
-  }
-
-  const fd=new FormData();
-  fd.append("name",name);
-  fd.append("category",category.value);
-  fd.append("shelf",shelf.value);
-  fd.append("level",level.value);
-  fd.append("notes",notes.value);
-  if(image.files[0]) fd.append("image",image.files[0]);
-
-  const r=await fetch(SCRIPT_URL,{method:"POST",body:fd});
-  const j=await r.json();
-
-  if(j.status==="success"){
-    itemName.value=category.value=shelf.value=level.value=notes.value="";
-    image.value="";
-    loadItems();
-  }else{
-    alert("فشل الحفظ");
-  }
 }
 
 loadItems();

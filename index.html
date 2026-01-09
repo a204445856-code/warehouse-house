@@ -46,7 +46,7 @@ button{
 }
 .item{
   border-bottom:1px solid #eee;
-  padding:6px 0;
+  padding:8px 0;
   cursor:pointer;
 }
 .item:hover{
@@ -56,33 +56,27 @@ img{
   max-width:100%;
   border-radius:6px;
   margin-top:5px;
+  cursor:pointer;
 }
 
-/* شاشة كاملة */
-.fullscreen{
+/* نافذة عرض التفاصيل */
+.modal{
   display:none;
   position:fixed;
   inset:0;
-  background:#fff;
+  background:rgba(0,0,0,.6);
   z-index:1000;
-  overflow:auto;
-  padding:20px;
 }
-.gallery img{
-  width:90px;
-  height:90px;
-  object-fit:cover;
-  margin:6px;
-  cursor:pointer;
-}
-.top-bar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+.modal-content{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  max-width:400px;
+  margin:10% auto;
 }
 .close{
   cursor:pointer;
-  font-size:20px;
+  text-align:left;
 }
 </style>
 </head>
@@ -93,13 +87,9 @@ img{
 
 <div class="container">
 
-<!-- البحث + القائمة -->
+<!-- القائمة + البحث -->
 <div class="card">
-  <div class="top-bar">
-    <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
-    <button onclick="openGallery()">🖼️</button>
-  </div>
-
+  <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
   <div id="items">جاري التحميل...</div>
 </div>
 
@@ -139,23 +129,25 @@ img{
 
 </div>
 
-<!-- شاشة معرض الصور -->
-<div class="fullscreen" id="galleryScreen">
-  <div class="top-bar">
-    <h3>📷 معرض الصور</h3>
-    <span class="close" onclick="closeGallery()">✖</span>
+<!-- نافذة التفاصيل -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="close" onclick="closeModal()">✖</div>
+    <img id="mImg">
+    <p><b id="mName"></b></p>
+    <p id="mInfo"></p>
+    <p id="mNotes"></p>
   </div>
-  <div class="gallery" id="galleryImages"></div>
 </div>
 
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbyURdNGiW7f8GO7gSSFX09f36lwIaRwM1Az4ahD_Uiq2XhriEjgByk3IEjCHtPIK7IZ/exec";
+"https://script.google.com/macros/s/AKfycbzHNkErFAkv9y7kD9OyDoimgxsQJyxZTgoDsUE6nUpIyxaBTQUcMIbMTSnzV8TGXwmh/exec";
 
 let ITEMS = [];
 let FILTERED = [];
 
-/* تعبئة الأرفف */
+/* تعبئة الأرفف 1–100 */
 for(let i=1;i<=100;i++){
   shelf.innerHTML += `<option>${i}</option>`;
 }
@@ -169,35 +161,43 @@ async function saveItem(){
   fd.append("notes", notes.value);
   if(image.files[0]) fd.append("image", image.files[0]);
 
-  const r = await fetch(SCRIPT_URL,{method:"POST",body:fd});
-  const j = await r.json();
-  if(j.status==="success"){
-    loadItems();
+  const res = await fetch(SCRIPT_URL,{method:"POST",body:fd});
+  const json = await res.json();
+
+  if(json.status==="success"){
     clearForm();
+    loadItems();
+  }else{
+    alert("حدث خطأ");
   }
 }
 
 function clearForm(){
-  name.value = category.value = shelf.value = level.value = notes.value = "";
+  name.value = "";
+  category.value = "";
+  shelf.value = "";
+  level.value = "";
+  notes.value = "";
   image.value = "";
 }
 
 async function loadItems(){
-  const r = await fetch(SCRIPT_URL+"?action=list");
-  ITEMS = await r.json();
+  const res = await fetch(SCRIPT_URL + "?action=list");
+  ITEMS = await res.json();
   FILTERED = ITEMS;
   renderItems();
 }
 
 function renderItems(){
   items.innerHTML = "";
-  if(!FILTERED.length){
+  if(FILTERED.length === 0){
     items.innerHTML = "لا توجد نتائج";
     return;
   }
-  FILTERED.forEach((i,idx)=>{
+
+  FILTERED.forEach((i, idx)=>{
     items.innerHTML += `
-      <div class="item" onclick="selectItem(${idx})">
+      <div class="item" onclick="showDetails(${idx})">
         ${i.name}
       </div>
     `;
@@ -206,38 +206,21 @@ function renderItems(){
 
 function searchByName(){
   const q = searchInput.value.trim();
-  FILTERED = ITEMS.filter(i=>i.name.startsWith(q));
+  FILTERED = ITEMS.filter(i => i.name && i.name.startsWith(q));
   renderItems();
 }
 
-function selectItem(index){
+function showDetails(index){
   const i = FILTERED[index];
-  name.value = i.name;
-  category.value = i.category;
-  shelf.value = i.shelf;
-  level.value = i.level;
-  notes.value = i.notes || "";
+  modal.style.display = "block";
+  mImg.src = i.image || "";
+  mName.textContent = i.name;
+  mInfo.textContent = `${i.category} | رف ${i.shelf} | ${i.level}`;
+  mNotes.textContent = i.notes || "";
 }
 
-function openGallery(){
-  galleryImages.innerHTML = "";
-  ITEMS.forEach((i,idx)=>{
-    if(i.image){
-      galleryImages.innerHTML += `
-        <img src="${i.image}" onclick="selectFromGallery(${idx})">
-      `;
-    }
-  });
-  galleryScreen.style.display="block";
-}
-
-function selectFromGallery(index){
-  galleryScreen.style.display="none";
-  selectItem(index);
-}
-
-function closeGallery(){
-  galleryScreen.style.display="none";
+function closeModal(){
+  modal.style.display = "none";
 }
 
 loadItems();

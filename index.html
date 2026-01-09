@@ -6,91 +6,46 @@
 <title>مستودع البيت</title>
 
 <style>
-body{
-  font-family:Tahoma,Arial;
-  background:#f5f6f7;
-  margin:0;
-}
-header{
-  text-align:center;
-  padding:20px;
-  font-size:26px;
-}
-.container{
-  display:flex;
-  gap:20px;
-  padding:20px;
-  flex-wrap:wrap;
-}
-.card{
-  background:#fff;
-  border-radius:10px;
-  padding:15px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-  flex:1;
-  min-width:300px;
-}
-input,select,textarea,button{
-  width:100%;
-  padding:8px;
-  margin-top:6px;
-  font-size:14px;
-}
-button{
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  padding:10px;
-  cursor:pointer;
-}
-.top-bar{
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-.icon-btn{
-  font-size:20px;
-  cursor:pointer;
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  padding:6px 10px;
-}
+body{font-family:Tahoma,Arial;background:#f5f6f7;margin:0}
+header{text-align:center;padding:20px;font-size:26px}
+.container{display:flex;gap:20px;padding:20px;flex-wrap:wrap}
+.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);flex:1;min-width:320px}
+input,select,textarea,button{width:100%;padding:8px;margin-top:6px;font-size:14px}
+button{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px;cursor:pointer}
+.top-bar{display:flex;gap:8px;align-items:center}
+.icon-btn{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:18px;cursor:pointer}
+
 .item{
+  display:flex;
+  align-items:center;
+  gap:8px;
   border-bottom:1px solid #eee;
-  padding:8px 0;
-  cursor:pointer;
+  padding:6px 0;
 }
-.item:hover{background:#f0f2f5}
+.item img{
+  width:40px;
+  height:40px;
+  object-fit:cover;
+  border-radius:6px;
+}
+.item-name{flex:1;cursor:pointer}
+.item-actions span{
+  cursor:pointer;
+  margin-right:6px;
+  font-size:18px;
+}
 
 /* معرض الصور */
 .gallery-screen{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:#fff;
-  z-index:1000;
-  overflow:auto;
-  padding:20px;
+  display:none;position:fixed;inset:0;background:#fff;
+  z-index:1000;padding:20px;overflow:auto
 }
-.gallery{
-  display:flex;
-  flex-wrap:wrap;
-  gap:10px;
-}
+.gallery{display:flex;flex-wrap:wrap;gap:10px}
 .gallery img{
-  width:90px;
-  height:90px;
-  object-fit:cover;
-  border-radius:6px;
-  cursor:pointer;
+  width:90px;height:90px;object-fit:cover;
+  border-radius:6px;cursor:pointer
 }
-.close{
-  font-size:20px;
-  cursor:pointer;
-}
+.close{font-size:20px;cursor:pointer}
 </style>
 </head>
 
@@ -100,7 +55,7 @@ button{
 
 <div class="container">
 
-<!-- القائمة + البحث -->
+<!-- القائمة -->
 <div class="card">
   <div class="top-bar">
     <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
@@ -111,10 +66,9 @@ button{
 
 <!-- الإدخال -->
 <div class="card">
-  <h3>إضافة / عرض غرض</h3>
+  <h3>إضافة / تعديل غرض</h3>
 
   <input id="itemName" placeholder="اسم الغرض">
-
   <select id="category">
     <option value="">المنطقة / القسم</option>
     <option>مستودع يمين</option>
@@ -143,7 +97,7 @@ button{
 
 </div>
 
-<!-- شاشة معرض الصور -->
+<!-- معرض الصور -->
 <div class="gallery-screen" id="galleryScreen">
   <div style="display:flex;justify-content:space-between;align-items:center">
     <h3>🖼️ معرض الصور</h3>
@@ -157,16 +111,81 @@ const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbyOEyeIgyvubIw5A3dpWIC93eLs3Zn9EJ7o5hJhqPgBYfJy84lYIcKRay7bXUoB7W61/exec";
 
 let ITEMS=[];
+let CURRENT_INDEX=null;
 
-/* تعبئة الأرفف */
-for(let i=1;i<=100;i++){shelf.innerHTML+=`<option>${i}</option>`}
+/* الأرفف */
+for(let i=1;i<=100;i++) shelf.innerHTML+=`<option>${i}</option>`;
 
+/* تحميل */
+async function loadItems(){
+  const r=await fetch(SCRIPT_URL+"?action=list");
+  ITEMS=await r.json();
+  renderItems(ITEMS);
+}
+
+/* عرض */
+function renderItems(arr){
+  items.innerHTML="";
+  if(!arr.length){items.innerHTML="لا توجد بيانات";return;}
+  arr.forEach((i,idx)=>{
+    items.innerHTML+=`
+      <div class="item">
+        ${i.image ? `<img src="${i.image}">` : ``}
+        <div class="item-name" onclick="editItem(${idx})">${i.name}</div>
+        <div class="item-actions">
+          <span onclick="editItem(${idx})">✏️</span>
+          <span onclick="deleteItem(${idx})">🗑️</span>
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* اختيار للتعديل */
+function editItem(index){
+  const i=ITEMS[index];
+  CURRENT_INDEX=index;
+  itemName.value=i.name;
+  category.value=i.category;
+  shelf.value=i.shelf;
+  level.value=i.level;
+  notes.value=i.notes||"";
+}
+
+/* حذف (واجهة فقط) */
+function deleteItem(index){
+  if(!confirm("هل تريدين حذف الغرض؟")) return;
+  ITEMS.splice(index,1);
+  renderItems(ITEMS);
+}
+
+/* بحث */
+function searchByName(){
+  const q=searchInput.value.trim();
+  renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);
+}
+
+/* معرض الصور */
+function openGallery(){
+  galleryImages.innerHTML="";
+  ITEMS.forEach((i,idx)=>{
+    if(i.image){
+      galleryImages.innerHTML+=`
+        <img src="${i.image}" onclick="editItem(${idx});closeGallery()">
+      `;
+    }
+  });
+  galleryScreen.style.display="block";
+}
+function closeGallery(){galleryScreen.style.display="none";}
+
+/* حفظ (إضافة فقط حالياً) */
 async function saveItem(){
-  const nameValue=itemName.value.trim();
-  if(!nameValue){alert("اسم الغرض مطلوب");return}
+  const name=itemName.value.trim();
+  if(!name){alert("اسم الغرض مطلوب");return;}
 
   const fd=new FormData();
-  fd.append("name",nameValue);
+  fd.append("name",name);
   fd.append("category",category.value);
   fd.append("shelf",shelf.value);
   fd.append("level",level.value);
@@ -177,63 +196,10 @@ async function saveItem(){
   const j=await r.json();
 
   if(j.status==="success"){
-    itemName.value="";
-    category.value="";
-    shelf.value="";
-    level.value="";
-    notes.value="";
+    itemName.value=category.value=shelf.value=level.value=notes.value="";
     image.value="";
     loadItems();
-  }else{
-    alert("فشل الحفظ");
-  }
-}
-
-async function loadItems(){
-  const r=await fetch(SCRIPT_URL+"?action=list");
-  ITEMS=await r.json();
-  renderItems(ITEMS);
-}
-
-function renderItems(arr){
-  items.innerHTML="";
-  if(!arr.length){items.innerHTML="لا توجد بيانات";return}
-  arr.forEach(i=>{
-    items.innerHTML+=`<div class="item">${i.name}</div>`;
-  });
-}
-
-function searchByName(){
-  const q=searchInput.value.trim();
-  renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);
-}
-
-/* ===== معرض الصور ===== */
-function openGallery(){
-  galleryImages.innerHTML="";
-  ITEMS.forEach(i=>{
-    if(i.image){
-      galleryImages.innerHTML+=`
-        <img src="${i.image}" onclick="selectFromGallery('${i.name}')">
-      `;
-    }
-  });
-  galleryScreen.style.display="block";
-}
-
-function selectFromGallery(name){
-  const i=ITEMS.find(x=>x.name===name);
-  if(!i)return;
-  galleryScreen.style.display="none";
-  itemName.value=i.name;
-  category.value=i.category;
-  shelf.value=i.shelf;
-  level.value=i.level;
-  notes.value=i.notes||"";
-}
-
-function closeGallery(){
-  galleryScreen.style.display="none";
+  }else alert("فشل الحفظ");
 }
 
 loadItems();

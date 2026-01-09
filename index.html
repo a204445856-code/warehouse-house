@@ -6,50 +6,13 @@
 <title>مستودع البيت</title>
 
 <style>
-body{
-  font-family: Tahoma, Arial;
-  background:#f5f6f7;
-  margin:0;
-}
-header{
-  text-align:center;
-  padding:20px;
-  font-size:26px;
-}
-.container{
-  display:flex;
-  gap:20px;
-  padding:20px;
-  flex-wrap:wrap;
-}
-.card{
-  background:#fff;
-  border-radius:10px;
-  padding:15px;
-  box-shadow:0 2px 6px rgba(0,0,0,.1);
-  flex:1;
-  min-width:300px;
-}
-input, select, textarea, button{
-  width:100%;
-  padding:8px;
-  margin-top:6px;
-  font-size:14px;
-}
-button{
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  border-radius:6px;
-  padding:10px;
-  cursor:pointer;
-}
-.item{
-  border-bottom:1px solid #eee;
-  padding:8px 0;
-  cursor:pointer;
-}
-.item:hover{ background:#f0f2f5; }
+body{font-family:Tahoma,Arial;background:#f5f6f7;margin:0}
+header{text-align:center;padding:20px;font-size:26px}
+.container{display:flex;gap:20px;padding:20px;flex-wrap:wrap}
+.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);flex:1;min-width:300px}
+input,select,textarea,button{width:100%;padding:8px;margin-top:6px;font-size:14px}
+button{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px;cursor:pointer}
+.item{border-bottom:1px solid #eee;padding:8px 0}
 </style>
 </head>
 
@@ -59,17 +22,16 @@ button{
 
 <div class="container">
 
-<!-- القائمة -->
 <div class="card">
   <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
   <div id="items">جاري التحميل...</div>
 </div>
 
-<!-- الإدخال -->
 <div class="card">
   <h3>إضافة غرض</h3>
 
-  <input id="name" placeholder="اسم الغرض">
+  <!-- ⚠️ تغيير مهم هنا -->
+  <input id="itemName" placeholder="اسم الغرض">
 
   <select id="category">
     <option value="">المنطقة / القسم</option>
@@ -101,84 +63,55 @@ button{
 
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbzHNkErFAkv9y7kD9OyDoimgxsQJyxZTgoDsUE6nUpIyxaBTQUcMIbMTSnzV8TGXwmh/exec";
+"https://script.google.com/macros/s/AKfycbwUAeYB7ikegOHUnXBQhV400xeQY8nRXwI7EhO0DaPOdjNR4rHkLUD0JyG2BcMt_Aqb/exec";
 
-let ITEMS = [];
+let ITEMS=[];
 
-// تعبئة الأرفف
-for(let i=1;i<=100;i++){
-  shelf.innerHTML += `<option>${i}</option>`;
-}
+for(let i=1;i<=100;i++){shelf.innerHTML+=`<option>${i}</option>`}
 
 async function saveItem(){
-  if(!name.value.trim()){
-    alert("اسم الغرض مطلوب");
-    return;
-  }
+  const nameValue = itemName.value.trim();
+  if(!nameValue){alert("اسم الغرض مطلوب");return}
 
-  const fd = new FormData();
-  fd.append("name", name.value.trim());
+  const fd=new FormData();
+  fd.append("name", nameValue);   // 👈 الآن الاسم يُرسل صح
   fd.append("category", category.value);
   fd.append("shelf", shelf.value);
   fd.append("level", level.value);
   fd.append("notes", notes.value);
   if(image.files[0]) fd.append("image", image.files[0]);
 
-  const res = await fetch(SCRIPT_URL,{method:"POST",body:fd});
-  const json = await res.json();
+  const r=await fetch(SCRIPT_URL,{method:"POST",body:fd});
+  const j=await r.json();
 
-  if(json.status==="success"){
-    clearForm();
-    await loadItems(); // 🔑 إعادة تحميل من المصدر
+  if(j.status==="success"){
+    itemName.value="";
+    category.value="";
+    shelf.value="";
+    level.value="";
+    notes.value="";
+    image.value="";
+    loadItems();
   }else{
-    alert("حدث خطأ");
+    alert("فشل الحفظ");
   }
 }
 
-function clearForm(){
-  name.value = "";
-  category.value = "";
-  shelf.value = "";
-  level.value = "";
-  notes.value = "";
-  image.value = "";
-}
-
 async function loadItems(){
-  const res = await fetch(SCRIPT_URL + "?action=list");
-  const data = await res.json();
-
-  // حماية: لا نأخذ إلا العناصر الصحيحة
-  ITEMS = data.filter(i => i && i.name);
-
+  const r=await fetch(SCRIPT_URL+"?action=list");
+  ITEMS=await r.json();
   renderItems(ITEMS);
 }
 
 function renderItems(arr){
-  items.innerHTML = "";
-  if(arr.length === 0){
-    items.innerHTML = "لا توجد بيانات";
-    return;
-  }
-
-  arr.forEach(i=>{
-    items.innerHTML += `
-      <div class="item">
-        ${i.name}
-      </div>
-    `;
-  });
+  items.innerHTML="";
+  if(!arr.length){items.innerHTML="لا توجد بيانات";return}
+  arr.forEach(i=>items.innerHTML+=`<div class="item">${i.name}</div>`);
 }
 
 function searchByName(){
-  const q = searchInput.value.trim();
-  if(!q){
-    renderItems(ITEMS);
-    return;
-  }
-  renderItems(
-    ITEMS.filter(i => i.name.startsWith(q))
-  );
+  const q=searchInput.value.trim();
+  renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);
 }
 
 loadItems();

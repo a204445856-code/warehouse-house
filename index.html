@@ -49,35 +49,7 @@ button{
   padding:8px 0;
   cursor:pointer;
 }
-.item:hover{
-  background:#f0f2f5;
-}
-img{
-  max-width:100%;
-  border-radius:6px;
-  margin-top:5px;
-  cursor:pointer;
-}
-
-/* نافذة عرض التفاصيل */
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  z-index:1000;
-}
-.modal-content{
-  background:#fff;
-  padding:15px;
-  border-radius:10px;
-  max-width:400px;
-  margin:10% auto;
-}
-.close{
-  cursor:pointer;
-  text-align:left;
-}
+.item:hover{ background:#f0f2f5; }
 </style>
 </head>
 
@@ -87,7 +59,7 @@ img{
 
 <div class="container">
 
-<!-- القائمة + البحث -->
+<!-- القائمة -->
 <div class="card">
   <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
   <div id="items">جاري التحميل...</div>
@@ -95,7 +67,7 @@ img{
 
 <!-- الإدخال -->
 <div class="card">
-  <h3>إضافة / عرض غرض</h3>
+  <h3>إضافة غرض</h3>
 
   <input id="name" placeholder="اسم الغرض">
 
@@ -110,9 +82,7 @@ img{
     <option>غرفة النوم</option>
   </select>
 
-  <select id="shelf">
-    <option value="">رقم الرف</option>
-  </select>
+  <select id="shelf"><option value="">رقم الرف</option></select>
 
   <select id="level">
     <option value="">المستوى</option>
@@ -129,32 +99,25 @@ img{
 
 </div>
 
-<!-- نافذة التفاصيل -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <div class="close" onclick="closeModal()">✖</div>
-    <img id="mImg">
-    <p><b id="mName"></b></p>
-    <p id="mInfo"></p>
-    <p id="mNotes"></p>
-  </div>
-</div>
-
 <script>
 const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbzHNkErFAkv9y7kD9OyDoimgxsQJyxZTgoDsUE6nUpIyxaBTQUcMIbMTSnzV8TGXwmh/exec";
 
 let ITEMS = [];
-let FILTERED = [];
 
-/* تعبئة الأرفف 1–100 */
+// تعبئة الأرفف
 for(let i=1;i<=100;i++){
   shelf.innerHTML += `<option>${i}</option>`;
 }
 
 async function saveItem(){
+  if(!name.value.trim()){
+    alert("اسم الغرض مطلوب");
+    return;
+  }
+
   const fd = new FormData();
-  fd.append("name", name.value);
+  fd.append("name", name.value.trim());
   fd.append("category", category.value);
   fd.append("shelf", shelf.value);
   fd.append("level", level.value);
@@ -166,7 +129,7 @@ async function saveItem(){
 
   if(json.status==="success"){
     clearForm();
-    loadItems();
+    await loadItems(); // 🔑 إعادة تحميل من المصدر
   }else{
     alert("حدث خطأ");
   }
@@ -183,21 +146,24 @@ function clearForm(){
 
 async function loadItems(){
   const res = await fetch(SCRIPT_URL + "?action=list");
-  ITEMS = await res.json();
-  FILTERED = ITEMS;
-  renderItems();
+  const data = await res.json();
+
+  // حماية: لا نأخذ إلا العناصر الصحيحة
+  ITEMS = data.filter(i => i && i.name);
+
+  renderItems(ITEMS);
 }
 
-function renderItems(){
+function renderItems(arr){
   items.innerHTML = "";
-  if(FILTERED.length === 0){
-    items.innerHTML = "لا توجد نتائج";
+  if(arr.length === 0){
+    items.innerHTML = "لا توجد بيانات";
     return;
   }
 
-  FILTERED.forEach((i, idx)=>{
+  arr.forEach(i=>{
     items.innerHTML += `
-      <div class="item" onclick="showDetails(${idx})">
+      <div class="item">
         ${i.name}
       </div>
     `;
@@ -206,21 +172,13 @@ function renderItems(){
 
 function searchByName(){
   const q = searchInput.value.trim();
-  FILTERED = ITEMS.filter(i => i.name && i.name.startsWith(q));
-  renderItems();
-}
-
-function showDetails(index){
-  const i = FILTERED[index];
-  modal.style.display = "block";
-  mImg.src = i.image || "";
-  mName.textContent = i.name;
-  mInfo.textContent = `${i.category} | رف ${i.shelf} | ${i.level}`;
-  mNotes.textContent = i.notes || "";
-}
-
-function closeModal(){
-  modal.style.display = "none";
+  if(!q){
+    renderItems(ITEMS);
+    return;
+  }
+  renderItems(
+    ITEMS.filter(i => i.name.startsWith(q))
+  );
 }
 
 loadItems();

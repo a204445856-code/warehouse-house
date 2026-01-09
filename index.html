@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -42,7 +43,6 @@ button{
   border:none;
   border-radius:6px;
   padding:10px;
-  cursor:pointer;
 }
 .item{
   border-bottom:1px solid #eee;
@@ -52,39 +52,6 @@ img{
   max-width:100%;
   border-radius:6px;
   margin-top:5px;
-  cursor:pointer;
-}
-.search-images{
-  text-align:left;
-  margin-bottom:10px;
-}
-.search-images a{
-  text-decoration:none;
-  font-size:18px;
-}
-
-/* ===== Modal ===== */
-.modal{
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.6);
-  z-index:1000;
-}
-.modal-content{
-  background:#fff;
-  border-radius:10px;
-  padding:15px;
-  max-width:400px;
-  margin:10% auto;
-}
-.modal-content img{
-  max-width:100%;
-}
-.close{
-  text-align:left;
-  font-size:20px;
-  cursor:pointer;
 }
 </style>
 </head>
@@ -95,36 +62,20 @@ img{
 
 <div class="container">
 
-<!-- قائمة الأغراض -->
+<!-- القائمة -->
 <div class="card">
-  <div class="search-images">
-    <a href="https://www.google.com/imghp" target="_blank">🔍🖼️ البحث بالصور</a>
-  </div>
-
   <h3>الأغراض</h3>
   <div id="items">جاري التحميل...</div>
 </div>
 
-<!-- نموذج الإضافة -->
+<!-- النموذج -->
 <div class="card">
   <h3>إضافة غرض</h3>
 
   <input id="name" placeholder="اسم الغرض">
-
-  <select id="category">
-    <option value="">اختر المنطقة / القسم</option>
-    <option>مستودع يمين</option>
-    <option>مستودع يسار</option>
-    <option>مطبخ</option>
-    <option>صالة</option>
-    <option>غرفة البنات</option>
-    <option>غرفة الأولاد</option>
-    <option>غرفة النوم</option>
-  </select>
-
-  <select id="shelf"><option value="">اختر رقم الرف</option></select>
-  <select id="level"><option value="">اختر المستوى</option></select>
-
+  <input id="category" placeholder="التصنيف">
+  <input id="shelf" placeholder="رقم الرف">
+  <input id="level" placeholder="المستوى">
   <textarea id="notes" placeholder="ملاحظات"></textarea>
   <input type="file" id="image">
 
@@ -133,76 +84,53 @@ img{
 
 </div>
 
-<!-- ===== Modal ===== -->
-<div class="modal" id="modal">
-  <div class="modal-content">
-    <div class="close" onclick="closeModal()">✖</div>
-    <img id="mImage">
-    <p><b id="mName"></b></p>
-    <p id="mCategory"></p>
-    <p id="mShelf"></p>
-    <p id="mNotes"></p>
-    <a id="mSearch" target="_blank">🔍 البحث عن صور هذا الغرض</a>
-  </div>
-</div>
-
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbxz4O88gBNVIIfEmIUwcYTZX9dqmOwwQUx9AvSXCT48n_LycZIHSNs7zIrPWb1Kdpek/exec";
-
-// تعبئة 1–100
-["shelf","level"].forEach(id=>{
-  const s=document.getElementById(id);
-  for(let i=1;i<=100;i++){
-    const o=document.createElement("option");
-    o.value=i;o.textContent=i;s.appendChild(o);
-  }
-});
+"https://script.google.com/macros/s/AKfycbxz4O88gBNVIIfEmIUwcYTZX9dqmOwwQUx9AvSXCT48n_LycZIHSNs7zIrPWb1Kdpek/exec";";
 
 async function saveItem(){
-  const fd=new FormData();
-  fd.append("name",name.value);
-  fd.append("category",category.value);
-  fd.append("shelf",shelf.value);
-  fd.append("level",level.value);
-  fd.append("notes",notes.value);
-  if(image.files[0]) fd.append("image",image.files[0]);
+  const fd = new FormData();
+  fd.append("name", name.value);
+  fd.append("category", category.value);
+  fd.append("shelf", shelf.value);
+  fd.append("level", level.value);
+  fd.append("notes", notes.value);
+  if(image.files[0]) fd.append("image", image.files[0]);
 
-  const r=await fetch(SCRIPT_URL,{method:"POST",body:fd});
-  const j=await r.json();
-  if(j.status==="success"){
-    name.value=category.value=shelf.value=level.value=notes.value="";
-    image.value="";
+  const res = await fetch(SCRIPT_URL, { method:"POST", body:fd });
+  const json = await res.json();
+
+  if(json.status === "success"){
+    alert("تم الحفظ");
+    name.value = category.value = shelf.value = level.value = notes.value = "";
+    image.value = "";
     loadItems();
+  }else{
+    alert("حدث خطأ");
   }
 }
 
 async function loadItems(){
-  const r=await fetch(SCRIPT_URL+"?action=list");
-  const data=await r.json();
-  items.innerHTML="";
-  if(!data.length){items.innerHTML="لا توجد بيانات";return;}
+  const res = await fetch(SCRIPT_URL + "?action=list");
+  const data = await res.json();
+
+  items.innerHTML = "";
+  if(data.length === 0){
+    items.innerHTML = "لا توجد بيانات";
+    return;
+  }
 
   data.forEach(i=>{
-    items.innerHTML+=`
+    items.innerHTML += `
       <div class="item">
         <b>${i.name}</b><br>
-        ${i.category} | رف ${i.shelf}
-        ${i.image ? `<img src="${i.image}" onclick='openModal(${JSON.stringify(i)})'>`:""}
-      </div>`;
+        ${i.category} | رف ${i.shelf} | مستوى ${i.level}<br>
+        ${i.notes || ""}
+        ${i.image ? `<img src="${i.image}">` : ""}
+      </div>
+    `;
   });
 }
-
-function openModal(i){
-  modal.style.display="block";
-  mImage.src=i.image;
-  mName.textContent=i.name;
-  mCategory.textContent="القسم: "+i.category;
-  mShelf.textContent=`رف ${i.shelf} | مستوى ${i.level}`;
-  mNotes.textContent=i.notes||"";
-  mSearch.href="https://www.google.com/search?tbm=isch&q="+encodeURIComponent(i.name);
-}
-function closeModal(){modal.style.display="none";}
 
 loadItems();
 </script>

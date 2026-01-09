@@ -10,37 +10,43 @@ body{font-family:Tahoma,Arial;background:#f5f6f7;margin:0}
 header{text-align:center;padding:20px;font-size:26px}
 .container{display:flex;gap:20px;padding:20px;flex-wrap:wrap}
 .card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);flex:1;min-width:320px}
-input,select,textarea,button{width:100%;padding:8px;margin-top:6px;font-size:14px}
-button{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px;cursor:pointer}
+
+input,select,textarea,button{
+  width:100%;padding:8px;margin-top:6px;font-size:14px
+}
+button{
+  background:#2563eb;color:#fff;border:none;
+  border-radius:6px;padding:10px;cursor:pointer
+}
+
 .top-bar{display:flex;gap:8px;align-items:center}
-.icon-btn{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:18px;cursor:pointer}
+.icon-btn{
+  background:#2563eb;color:#fff;border:none;
+  border-radius:6px;padding:6px 10px;
+  font-size:18px;cursor:pointer
+}
 
 .item{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  border-bottom:1px solid #eee;
-  padding:6px 0;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid #eee;padding:6px 0
 }
 .item img{
-  width:40px;
-  height:40px;
-  object-fit:cover;
-  border-radius:6px;
+  width:40px;height:40px;object-fit:cover;border-radius:6px
 }
 .item-name{flex:1;cursor:pointer}
 .item-actions span{
-  cursor:pointer;
-  margin-right:6px;
-  font-size:18px;
+  cursor:pointer;margin-right:6px;font-size:18px
 }
 
 /* معرض الصور */
 .gallery-screen{
-  display:none;position:fixed;inset:0;background:#fff;
-  z-index:1000;padding:20px;overflow:auto
+  display:none;position:fixed;inset:0;
+  background:#fff;z-index:1000;
+  padding:20px;overflow:auto
 }
-.gallery{display:flex;flex-wrap:wrap;gap:10px}
+.gallery{
+  display:flex;flex-wrap:wrap;gap:10px
+}
 .gallery img{
   width:90px;height:90px;object-fit:cover;
   border-radius:6px;cursor:pointer
@@ -69,6 +75,7 @@ button{background:#2563eb;color:#fff;border:none;border-radius:6px;padding:10px;
   <h3>إضافة / تعديل غرض</h3>
 
   <input id="itemName" placeholder="اسم الغرض">
+
   <select id="category">
     <option value="">المنطقة / القسم</option>
     <option>مستودع يمين</option>
@@ -114,7 +121,9 @@ let ITEMS=[];
 let CURRENT_INDEX=null;
 
 /* الأرفف */
-for(let i=1;i<=100;i++) shelf.innerHTML+=`<option>${i}</option>`;
+for(let i=1;i<=100;i++){
+  shelf.innerHTML+=`<option>${i}</option>`;
+}
 
 /* تحميل */
 async function loadItems(){
@@ -123,10 +132,13 @@ async function loadItems(){
   renderItems(ITEMS);
 }
 
-/* عرض */
+/* عرض القائمة */
 function renderItems(arr){
   items.innerHTML="";
-  if(!arr.length){items.innerHTML="لا توجد بيانات";return;}
+  if(!arr.length){
+    items.innerHTML="لا توجد بيانات";
+    return;
+  }
   arr.forEach((i,idx)=>{
     items.innerHTML+=`
       <div class="item">
@@ -141,7 +153,7 @@ function renderItems(arr){
   });
 }
 
-/* اختيار للتعديل */
+/* تعبئة النموذج */
 function editItem(index){
   const i=ITEMS[index];
   CURRENT_INDEX=index;
@@ -177,12 +189,17 @@ function openGallery(){
   });
   galleryScreen.style.display="block";
 }
-function closeGallery(){galleryScreen.style.display="none";}
+function closeGallery(){
+  galleryScreen.style.display="none";
+}
 
-/* حفظ (إضافة فقط حالياً) */
+/* حفظ */
 async function saveItem(){
   const name=itemName.value.trim();
-  if(!name){alert("اسم الغرض مطلوب");return;}
+  if(!name){
+    alert("اسم الغرض مطلوب");
+    return;
+  }
 
   const fd=new FormData();
   fd.append("name",name);
@@ -199,7 +216,9 @@ async function saveItem(){
     itemName.value=category.value=shelf.value=level.value=notes.value="";
     image.value="";
     loadItems();
-  }else alert("فشل الحفظ");
+  }else{
+    alert("فشل الحفظ");
+  }
 }
 
 loadItems();

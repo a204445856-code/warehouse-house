@@ -44,47 +44,45 @@ button{
   padding:10px;
   cursor:pointer;
 }
-.icons{
-  display:flex;
-  gap:10px;
-  font-size:20px;
-  cursor:pointer;
-}
 .item{
   border-bottom:1px solid #eee;
-  padding:8px 0;
+  padding:6px 0;
+  cursor:pointer;
+}
+.item:hover{
+  background:#f0f2f5;
 }
 img{
   max-width:100%;
   border-radius:6px;
   margin-top:5px;
-  cursor:pointer;
 }
 
-/* نافذة عامة */
-.modal{
+/* شاشة كاملة */
+.fullscreen{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.6);
-  z-index:1000;
-}
-.modal-content{
   background:#fff;
-  padding:15px;
-  border-radius:10px;
-  max-width:420px;
-  margin:10% auto;
-}
-.close{
-  text-align:left;
-  cursor:pointer;
+  z-index:1000;
+  overflow:auto;
+  padding:20px;
 }
 .gallery img{
-  width:80px;
-  height:80px;
+  width:90px;
+  height:90px;
   object-fit:cover;
-  margin:5px;
+  margin:6px;
+  cursor:pointer;
+}
+.top-bar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.close{
+  cursor:pointer;
+  font-size:20px;
 }
 </style>
 </head>
@@ -95,24 +93,24 @@ img{
 
 <div class="container">
 
-<!-- القائمة -->
+<!-- البحث + القائمة -->
 <div class="card">
-  <div class="icons">
-    🔍 <input id="searchInput" placeholder="بحث بالاسم" oninput="searchByName()">
-    🖼️ <span onclick="openGallery()">معرض الصور</span>
+  <div class="top-bar">
+    <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
+    <button onclick="openGallery()">🖼️</button>
   </div>
 
   <div id="items">جاري التحميل...</div>
 </div>
 
-<!-- النموذج -->
+<!-- الإدخال -->
 <div class="card">
-  <h3>إضافة غرض</h3>
+  <h3>إضافة / عرض غرض</h3>
 
   <input id="name" placeholder="اسم الغرض">
 
   <select id="category">
-    <option value="">اختر المنطقة / القسم</option>
+    <option value="">المنطقة / القسم</option>
     <option>مستودع يمين</option>
     <option>مستودع يسار</option>
     <option>مطبخ</option>
@@ -122,10 +120,12 @@ img{
     <option>غرفة النوم</option>
   </select>
 
-  <select id="shelf"><option value="">اختر رقم الرف</option></select>
+  <select id="shelf">
+    <option value="">رقم الرف</option>
+  </select>
 
   <select id="level">
-    <option value="">اختر المستوى</option>
+    <option value="">المستوى</option>
     <option>أعلى</option>
     <option>وسط</option>
     <option>أسفل</option>
@@ -139,23 +139,13 @@ img{
 
 </div>
 
-<!-- نافذة البيانات -->
-<div class="modal" id="detailModal">
-  <div class="modal-content">
-    <div class="close" onclick="closeModal()">✖</div>
-    <img id="mImg">
-    <p><b id="mName"></b></p>
-    <p id="mInfo"></p>
-    <p id="mNotes"></p>
+<!-- شاشة معرض الصور -->
+<div class="fullscreen" id="galleryScreen">
+  <div class="top-bar">
+    <h3>📷 معرض الصور</h3>
+    <span class="close" onclick="closeGallery()">✖</span>
   </div>
-</div>
-
-<!-- نافذة معرض الصور -->
-<div class="modal" id="galleryModal">
-  <div class="modal-content gallery">
-    <div class="close" onclick="galleryModal.style.display='none'">✖</div>
-    <div id="galleryImages"></div>
-  </div>
+  <div class="gallery" id="galleryImages"></div>
 </div>
 
 <script>
@@ -163,80 +153,91 @@ const SCRIPT_URL =
 "https://script.google.com/macros/s/AKfycbzHNkErFAkv9y7kD9OyDoimgxsQJyxZTgoDsUE6nUpIyxaBTQUcMIbMTSnzV8TGXwmh/exec";
 
 let ITEMS = [];
+let FILTERED = [];
 
 /* تعبئة الأرفف */
 for(let i=1;i<=100;i++){
-  shelf.innerHTML+=`<option>${i}</option>`;
+  shelf.innerHTML += `<option>${i}</option>`;
 }
 
 async function saveItem(){
-  const fd=new FormData();
-  fd.append("name",name.value);
-  fd.append("category",category.value);
-  fd.append("shelf",shelf.value);
-  fd.append("level",level.value);
-  fd.append("notes",notes.value);
-  if(image.files[0]) fd.append("image",image.files[0]);
+  const fd = new FormData();
+  fd.append("name", name.value);
+  fd.append("category", category.value);
+  fd.append("shelf", shelf.value);
+  fd.append("level", level.value);
+  fd.append("notes", notes.value);
+  if(image.files[0]) fd.append("image", image.files[0]);
 
-  const r=await fetch(SCRIPT_URL,{method:"POST",body:fd});
-  const j=await r.json();
+  const r = await fetch(SCRIPT_URL,{method:"POST",body:fd});
+  const j = await r.json();
   if(j.status==="success"){
-    name.value=category.value=shelf.value=level.value=notes.value="";
-    image.value="";
     loadItems();
+    clearForm();
   }
 }
 
-async function loadItems(){
-  const r=await fetch(SCRIPT_URL+"?action=list");
-  ITEMS=await r.json();
-  renderItems(ITEMS);
+function clearForm(){
+  name.value = category.value = shelf.value = level.value = notes.value = "";
+  image.value = "";
 }
 
-function renderItems(arr){
-  items.innerHTML="";
-  if(!arr.length){items.innerHTML="لا توجد بيانات";return;}
-  arr.forEach((i,idx)=>{
-    items.innerHTML+=`
-      <div class="item">
-        <b>${i.name}</b><br>
-        ${i.category} | رف ${i.shelf} | ${i.level}
-      </div>`;
+async function loadItems(){
+  const r = await fetch(SCRIPT_URL+"?action=list");
+  ITEMS = await r.json();
+  FILTERED = ITEMS;
+  renderItems();
+}
+
+function renderItems(){
+  items.innerHTML = "";
+  if(!FILTERED.length){
+    items.innerHTML = "لا توجد نتائج";
+    return;
+  }
+  FILTERED.forEach((i,idx)=>{
+    items.innerHTML += `
+      <div class="item" onclick="selectItem(${idx})">
+        ${i.name}
+      </div>
+    `;
   });
 }
 
 function searchByName(){
-  const q=searchInput.value.trim();
-  renderItems(
-    ITEMS.filter(i=>i.name.includes(q))
-  );
+  const q = searchInput.value.trim();
+  FILTERED = ITEMS.filter(i=>i.name.startsWith(q));
+  renderItems();
 }
 
-/* ===== معرض الصور ===== */
+function selectItem(index){
+  const i = FILTERED[index];
+  name.value = i.name;
+  category.value = i.category;
+  shelf.value = i.shelf;
+  level.value = i.level;
+  notes.value = i.notes || "";
+}
+
 function openGallery(){
-  galleryImages.innerHTML="";
+  galleryImages.innerHTML = "";
   ITEMS.forEach((i,idx)=>{
     if(i.image){
-      galleryImages.innerHTML+=`
-        <img src="${i.image}" onclick="showDetails(${idx})">
+      galleryImages.innerHTML += `
+        <img src="${i.image}" onclick="selectFromGallery(${idx})">
       `;
     }
   });
-  galleryModal.style.display="block";
+  galleryScreen.style.display="block";
 }
 
-function showDetails(index){
-  const i=ITEMS[index];
-  galleryModal.style.display="none";
-  detailModal.style.display="block";
-  mImg.src=i.image;
-  mName.textContent=i.name;
-  mInfo.textContent=`${i.category} | رف ${i.shelf} | ${i.level}`;
-  mNotes.textContent=i.notes||"";
+function selectFromGallery(index){
+  galleryScreen.style.display="none";
+  selectItem(index);
 }
 
-function closeModal(){
-  detailModal.style.display="none";
+function closeGallery(){
+  galleryScreen.style.display="none";
 }
 
 loadItems();

@@ -6,52 +6,51 @@
 <title>مستودع البيت</title>
 
 <style>
-body {
+body{
   font-family: Tahoma, Arial;
-  background:#f4f6f8;
+  background:#f5f6f7;
   margin:0;
 }
-header {
-  background:#1f2937;
-  color:#fff;
-  padding:15px;
+header{
   text-align:center;
-  font-size:20px;
+  padding:20px;
+  font-size:26px;
 }
-.container {
-  padding:15px;
+.container{
+  display:flex;
+  gap:20px;
+  padding:20px;
+  flex-wrap:wrap;
 }
-.card {
+.card{
   background:#fff;
   border-radius:10px;
   padding:15px;
-  margin-bottom:15px;
   box-shadow:0 2px 6px rgba(0,0,0,.1);
+  flex:1;
+  min-width:300px;
 }
-input, select, textarea, button {
+input, select, textarea, button{
   width:100%;
-  padding:10px;
-  margin-top:8px;
-  border-radius:6px;
-  border:1px solid #ccc;
-  font-size:15px;
+  padding:8px;
+  margin-top:6px;
+  font-size:14px;
 }
-button {
+button{
   background:#2563eb;
   color:#fff;
   border:none;
+  border-radius:6px;
+  padding:10px;
 }
-.list-item {
+.item{
   border-bottom:1px solid #eee;
-  padding:10px 0;
+  padding:8px 0;
 }
-.list-item:last-child {
-  border:none;
-}
-img {
+img{
   max-width:100%;
-  border-radius:8px;
-  margin-top:8px;
+  border-radius:6px;
+  margin-top:5px;
 }
 </style>
 </head>
@@ -62,67 +61,69 @@ img {
 
 <div class="container">
 
+<!-- القائمة -->
 <div class="card">
-<h3>إضافة غرض</h3>
-
-<input id="name" placeholder="اسم الغرض">
-<input id="category" placeholder="التصنيف">
-<input id="shelf" placeholder="رقم الرف">
-<input id="level" placeholder="المستوى">
-<textarea id="notes" placeholder="ملاحظات"></textarea>
-<input type="file" id="image">
-
-<button onclick="saveItem()">حفظ</button>
+  <h3>الأغراض</h3>
+  <div id="items">جاري التحميل...</div>
 </div>
 
+<!-- النموذج -->
 <div class="card">
-<h3>📋 الأغراض المحفوظة</h3>
-<div id="items"></div>
+  <h3>إضافة غرض</h3>
+
+  <input id="name" placeholder="اسم الغرض">
+  <input id="category" placeholder="التصنيف">
+  <input id="shelf" placeholder="رقم الرف">
+  <input id="level" placeholder="المستوى">
+  <textarea id="notes" placeholder="ملاحظات"></textarea>
+  <input type="file" id="image">
+
+  <button onclick="saveItem()">حفظ</button>
 </div>
 
 </div>
 
 <script>
-// 🔗 رابط Web App (تم وضعه لك)
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJ7wvRp76cZOVLDwA7aLyVPNelcwQEmYQLIitrbH8OCFl9550n03MO6IsPKz_-7k6T/exec";
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbyJ7wvRp76cZOVLDwA7aLyVPNelcwQEmYQLIitrbH8OCFl9550n03MO6IsPKz_-7k6T/exec";
 
-async function saveItem() {
+async function saveItem(){
   const fd = new FormData();
-  fd.append("action", "add");
   fd.append("name", name.value);
   fd.append("category", category.value);
   fd.append("shelf", shelf.value);
   fd.append("level", level.value);
   fd.append("notes", notes.value);
-  if (image.files[0]) fd.append("image", image.files[0]);
+  if(image.files[0]) fd.append("image", image.files[0]);
 
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    body: fd
-  });
-
+  const res = await fetch(SCRIPT_URL, { method:"POST", body:fd });
   const json = await res.json();
 
-  if (json.status === "success") {
-    alert("تم الحفظ بنجاح");
+  if(json.status === "success"){
+    alert("تم الحفظ");
     name.value = category.value = shelf.value = level.value = notes.value = "";
     image.value = "";
     loadItems();
-  } else {
+  }else{
     alert("حدث خطأ");
   }
 }
 
-async function loadItems() {
+async function loadItems(){
   const res = await fetch(SCRIPT_URL + "?action=list");
   const data = await res.json();
 
   items.innerHTML = "";
-  data.forEach(i => {
+  if(data.length === 0){
+    items.innerHTML = "لا توجد بيانات";
+    return;
+  }
+
+  data.forEach(i=>{
     items.innerHTML += `
-      <div class="list-item">
+      <div class="item">
         <b>${i.name}</b><br>
-        ${i.category || ""} | رف ${i.shelf || ""}<br>
+        ${i.category} | رف ${i.shelf} | مستوى ${i.level}<br>
         ${i.notes || ""}
         ${i.image ? `<img src="${i.image}">` : ""}
       </div>
@@ -130,7 +131,6 @@ async function loadItems() {
   });
 }
 
-// تحميل البيانات عند فتح الصفحة
 loadItems();
 </script>
 

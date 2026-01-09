@@ -2,124 +2,136 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>مستودع البيت</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مستودع البيت</title>
+
 <style>
-body{font-family:Arial;background:#f5f6f7;margin:0}
-h1{text-align:center;padding:15px}
-.container{display:flex;gap:15px;padding:15px;flex-wrap:wrap}
-.card{background:#fff;border-radius:8px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1)}
-.form,.list{flex:1;min-width:280px}
-.item{border:1px solid #ddd;border-radius:6px;padding:10px;margin-bottom:10px}
-img{max-width:100%;border-radius:6px;margin-top:5px}
-button{padding:8px;border:none;border-radius:5px;cursor:pointer}
-.save{background:#2563eb;color:#fff;width:100%}
-.delete{background:#ef4444;color:#fff}
-.edit{background:#f59e0b;color:#fff}
+body {
+  font-family: Tahoma, Arial;
+  background:#f4f6f8;
+  margin:0;
+}
+header {
+  background:#1f2937;
+  color:#fff;
+  padding:15px;
+  text-align:center;
+  font-size:20px;
+}
+.container {
+  padding:15px;
+}
+.card {
+  background:#fff;
+  border-radius:10px;
+  padding:15px;
+  margin-bottom:15px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+}
+input, select, textarea, button {
+  width:100%;
+  padding:10px;
+  margin-top:8px;
+  border-radius:6px;
+  border:1px solid #ccc;
+  font-size:15px;
+}
+button {
+  background:#2563eb;
+  color:#fff;
+  border:none;
+}
+.list-item {
+  border-bottom:1px solid #eee;
+  padding:10px 0;
+}
+.list-item:last-child {
+  border:none;
+}
+img {
+  max-width:100%;
+  border-radius:8px;
+  margin-top:8px;
+}
 </style>
 </head>
 
 <body>
 
-<h1>📦 مستودع البيت</h1>
+<header>📦 مستودع البيت</header>
 
 <div class="container">
 
-<div class="card form">
+<div class="card">
+<h3>إضافة غرض</h3>
+
 <input id="name" placeholder="اسم الغرض">
 <input id="category" placeholder="التصنيف">
-<input id="shelf" type="number" placeholder="رقم الرف">
-<input id="side" placeholder="الجهة">
+<input id="shelf" placeholder="رقم الرف">
 <input id="level" placeholder="المستوى">
-<input id="zone" placeholder="المنطقة">
 <textarea id="notes" placeholder="ملاحظات"></textarea>
-<input type="file" id="image" accept="image/*">
-<button class="save" onclick="save()">حفظ</button>
+<input type="file" id="image">
+
+<button onclick="saveItem()">حفظ</button>
 </div>
 
-<div class="card list" id="list">جاري التحميل...</div>
+<div class="card">
+<h3>📋 الأغراض المحفوظة</h3>
+<div id="items"></div>
+</div>
 
 </div>
 
 <script>
-const API_URL =https://script.google.com/macros/s/AKfycbxqI8JJl7TaPu_8R8mzWJMYML3baWLByr1xb4hetsdriUhGlvnD4JERCyNDtt9FLZw/exec;
+// 🔗 رابط Web App (تم وضعه لك)
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyJ7wvRp76cZOVLDwA7aLyVPNelcwQEmYQLIitrbH8OCFl9550n03MO6IsPKz_-7k6T/exec";
 
-let items=[], editId=null;
+async function saveItem() {
+  const fd = new FormData();
+  fd.append("action", "add");
+  fd.append("name", name.value);
+  fd.append("category", category.value);
+  fd.append("shelf", shelf.value);
+  fd.append("level", level.value);
+  fd.append("notes", notes.value);
+  if (image.files[0]) fd.append("image", image.files[0]);
 
-function load(){
- fetch(API_URL).then(r=>r.json()).then(d=>{
-  items=d; render();
- });
+  const res = await fetch(SCRIPT_URL, {
+    method: "POST",
+    body: fd
+  });
+
+  const json = await res.json();
+
+  if (json.status === "success") {
+    alert("تم الحفظ بنجاح");
+    name.value = category.value = shelf.value = level.value = notes.value = "";
+    image.value = "";
+    loadItems();
+  } else {
+    alert("حدث خطأ");
+  }
 }
 
-function render(){
- const box=document.getElementById("list");
- box.innerHTML="";
- items.slice().reverse().forEach(i=>{
-  box.innerHTML+=`
-   <div class="item">
-    <b>${i.name||"بدون اسم"}</b> (رف ${i.shelf||"-"})
-    ${i.image_url?`<img src="${i.image_url}">`:""}
-    <div>
-     <button class="edit" onclick="edit(${i.id})">تعديل</button>
-     <button class="delete" onclick="del(${i.id})">حذف</button>
-    </div>
-   </div>`;
- });
+async function loadItems() {
+  const res = await fetch(SCRIPT_URL + "?action=list");
+  const data = await res.json();
+
+  items.innerHTML = "";
+  data.forEach(i => {
+    items.innerHTML += `
+      <div class="list-item">
+        <b>${i.name}</b><br>
+        ${i.category || ""} | رف ${i.shelf || ""}<br>
+        ${i.notes || ""}
+        ${i.image ? `<img src="${i.image}">` : ""}
+      </div>
+    `;
+  });
 }
 
-function save(){
- const file=document.getElementById("image").files[0];
- if(file){
-  const r=new FileReader();
-  r.onload=()=>send(r.result,file);
-  r.readAsDataURL(file);
- }else send();
-}
-
-function send(img,file){
- fetch(API_URL,{
-  method:"POST",
-  body:JSON.stringify({
-   id:editId,
-   name:name.value,
-   category:category.value,
-   shelf:shelf.value,
-   side:side.value,
-   level:level.value,
-   zone:zone.value,
-   notes:notes.value,
-   image:img||"",
-   imageName:file?file.name:"",
-   imageType:file?file.type:""
-  })
- }).then(()=>{clear();load();});
-}
-
-function edit(id){
- const i=items.find(x=>x.id==id);
- editId=id;
- name.value=i.name;
- category.value=i.category;
- shelf.value=i.shelf;
- side.value=i.side;
- level.value=i.level;
- zone.value=i.zone;
- notes.value=i.notes;
-}
-
-function del(id){
- if(!confirm("حذف؟"))return;
- fetch(API_URL,{method:"POST",body:JSON.stringify({delete:true,id})})
- .then(load);
-}
-
-function clear(){
- editId=null;
- document.querySelectorAll("input,textarea").forEach(e=>e.value="");
-}
-
-load();
+// تحميل البيانات عند فتح الصفحة
+loadItems();
 </script>
 
 </body>

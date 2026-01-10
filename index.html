@@ -14,7 +14,6 @@ header{text-align:center;padding:20px;font-size:26px}
   box-shadow:0 2px 6px rgba(0,0,0,.1);
   flex:1;min-width:320px
 }
-
 input,textarea,button{
   width:100%;padding:8px;margin-top:6px;font-size:14px
 }
@@ -22,14 +21,12 @@ button{
   background:#2563eb;color:#fff;border:none;
   border-radius:6px;padding:10px;cursor:pointer
 }
-
 .top-bar{display:flex;gap:8px;align-items:center}
 .icon-btn{
   background:#2563eb;color:#fff;border:none;
   border-radius:6px;padding:6px 10px;
   font-size:18px;cursor:pointer
 }
-
 .item{
   display:flex;align-items:center;gap:8px;
   border-bottom:1px solid #eee;padding:6px 0
@@ -38,11 +35,6 @@ button{
   width:40px;height:40px;object-fit:cover;border-radius:6px
 }
 .item-name{flex:1;cursor:pointer}
-.item-actions span{
-  cursor:pointer;margin-right:6px;font-size:18px
-}
-
-/* معرض الصور */
 .gallery-screen{
   display:none;position:fixed;inset:0;
   background:#fff;z-index:1000;
@@ -102,16 +94,11 @@ button{
 </div>
 
 <script>
-/*
-⚠️ غيّري هذا فقط
-ضعـي رابط Google Form هنا
-*/
-const GOOGLE_FORM_URL = "PUT_GOOGLE_FORM_LINK_HERE";
+/* رابط نموذج Google */
+const GOOGLE_FORM_URL =
+"https://docs.google.com/forms/d/e/1FAIpQLSd958KZhcKzzyge1mghKU8_0JK0O25TK5N0RzCD54okoTvc5w/viewform";
 
-/*
-⚠️ غيّري هذا
-رابط Google Sheet بصيغة JSON
-*/
+/* رابط Google Sheet بصيغة JSON */
 const SHEET_JSON_URL =
 "https://docs.google.com/spreadsheets/d/1foENTEF7sgI5bHaPNq1nIe4JD9Boo1kbnetJWwIa9Fg/gviz/tq?tqx=out:json";
 
@@ -134,9 +121,9 @@ async function loadItems(){
       name: c[1]?.v || "",
       category: c[2]?.v || "",
       shelf: c[3]?.v || "",
-      level: c[4]?.v || "",
-      notes: c[5]?.v || "",
-      image: c[6]?.v || ""
+      level: c[5]?.v || "",
+      notes: c[7]?.v || "",
+      image: c[9]?.v || ""   // ✅ العمود J
     };
   }).filter(i=>i.name);
 
@@ -160,7 +147,7 @@ function renderItems(arr){
   });
 }
 
-/* عرض البيانات */
+/* عرض بيانات الغرض */
 function showItem(index){
   const i=ITEMS[index];
   v_name.value=i.name;
@@ -176,7 +163,7 @@ function showItem(index){
   }
 }
 
-/* بحث */
+/* البحث بالاسم */
 function searchByName(){
   const q=searchInput.value.trim();
   renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);

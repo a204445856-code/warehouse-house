@@ -6,53 +6,70 @@
 <title>مستودع البيت</title>
 
 <style>
-body{font-family:Tahoma,Arial;background:#f5f6f7;margin:0}
-header{text-align:center;padding:20px;font-size:26px}
-.container{display:flex;gap:20px;padding:20px;flex-wrap:wrap}
-.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);flex:1;min-width:320px}
-
-input,select,textarea,button{
-  width:100%;padding:8px;margin-top:6px;font-size:14px
+*{box-sizing:border-box;font-family:Tajawal,Arial}
+body{margin:0;background:#f3f4f6}
+header{
+  background:#fff;
+  padding:15px 25px;
+  font-size:22px;
+  font-weight:bold;
+  border-bottom:1px solid #e5e7eb
 }
-button{
-  background:#2563eb;color:#fff;border:none;
-  border-radius:6px;padding:10px;cursor:pointer
+.container{
+  display:grid;
+  grid-template-columns:1fr 1.3fr;
+  gap:20px;
+  padding:20px
+}
+.card{
+  background:#fff;
+  border-radius:10px;
+  padding:20px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08)
 }
 
-.top-bar{display:flex;gap:8px;align-items:center}
-.icon-btn{
-  background:#2563eb;color:#fff;border:none;
-  border-radius:6px;padding:6px 10px;
-  font-size:18px;cursor:pointer
+/* القائمة */
+.search{margin-bottom:15px}
+.search input{
+  width:100%;padding:10px;border:1px solid #ddd;border-radius:8px
 }
-
 .item{
-  display:flex;align-items:center;gap:8px;
-  border-bottom:1px solid #eee;padding:6px 0
+  display:flex;gap:12px;align-items:center;
+  padding:10px;border:1px solid #eee;
+  border-radius:10px;margin-bottom:10px
 }
 .item img{
-  width:40px;height:40px;object-fit:cover;border-radius:6px;
-  cursor:pointer
+  width:60px;height:60px;object-fit:cover;
+  border-radius:8px;background:#eee
 }
-.item-name{flex:1;cursor:pointer}
-.item-actions span{
-  cursor:pointer;margin-right:6px;font-size:18px
+.item-info{flex:1}
+.item-info b{display:block;margin-bottom:4px}
+.item-actions{
+  display:flex;flex-direction:column;gap:6px
 }
+.item-actions button{
+  border:none;padding:6px 10px;border-radius:6px;
+  cursor:pointer;color:#fff;font-size:13px
+}
+.edit{background:#f59e0b}
+.delete{background:#ef4444}
 
-/* معرض الصور */
-.gallery-screen{
-  display:none;position:fixed;inset:0;
-  background:#fff;z-index:1000;
-  padding:20px;overflow:auto
+/* النموذج */
+label{font-size:13px;color:#374151;margin-top:10px;display:block}
+input,select,textarea{
+  width:100%;padding:10px;margin-top:5px;
+  border:1px solid #ddd;border-radius:8px
 }
-.gallery{
-  display:flex;flex-wrap:wrap;gap:10px
+textarea{resize:none;height:80px}
+.buttons{display:flex;gap:10px;margin-top:15px}
+.save{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
+.clear{background:#9ca3af;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
+.sync{background:#111827;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
+.note{margin-top:10px;font-size:12px;color:#6b7280}
+
+@media(max-width:900px){
+  .container{grid-template-columns:1fr}
 }
-.gallery img{
-  width:90px;height:90px;object-fit:cover;
-  border-radius:6px;cursor:pointer
-}
-.close{font-size:20px;cursor:pointer}
 </style>
 </head>
 
@@ -64,51 +81,48 @@ button{
 
 <!-- القائمة -->
 <div class="card">
-  <div class="top-bar">
-    <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
-    <button class="icon-btn" onclick="openGallery()">🖼️</button>
+  <div class="search">
+    <input id="searchInput" placeholder="ابحث بالاسم" oninput="searchByName()">
   </div>
   <div id="items">جاري التحميل...</div>
 </div>
 
 <!-- الإدخال -->
 <div class="card">
-  <h3>إضافة / تعديل غرض</h3>
-
-  <!-- النموذج الأصلي (لم يتغير) -->
   <form id="itemForm"
-        action="https://script.google.com/macros/s/AKfycbw4027olBqzmfcup0RmX-Rmqbtk7L5uniwLkZbxHyKmGKh6Au-UhXYQuiUKbSdtm7N1/exec"
-        method="POST"
-        enctype="multipart/form-data"
-        target="hiddenFrame"
-        onsubmit="afterSubmit()">
+    action="https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec"
+    method="POST"
+    enctype="multipart/form-data"
+    target="hiddenFrame"
+    onsubmit="afterSubmit()">
 
-    <input name="name" id="itemName" placeholder="اسم الغرض" required>
+    <label>اسم الغرض *</label>
+    <input name="name" id="itemName" required>
 
-    <select name="category" id="category">
-      <option value="">المنطقة / القسم</option>
-      <option>مستودع يمين</option>
-      <option>مستودع يسار</option>
-      <option>مطبخ</option>
-      <option>صالة</option>
-      <option>غرفة البنات</option>
-      <option>غرفة الأولاد</option>
-      <option>غرفة النوم</option>
-    </select>
+    <label>التصنيف</label>
+    <input name="category">
 
-    <select name="shelf" id="shelf"><option value="">رقم الرف</option></select>
+    <label>رقم الرف</label>
+    <input name="shelf">
 
-    <select name="level" id="level">
-      <option value="">المستوى</option>
-      <option>أعلى</option>
-      <option>وسط</option>
-      <option>أسفل</option>
-    </select>
+    <label>المستوى</label>
+    <input name="level">
 
-    <textarea name="notes" id="notes" placeholder="ملاحظات"></textarea>
-    <input type="file" name="image" id="image" accept="image/*">
+    <label>ملاحظات</label>
+    <textarea name="notes"></textarea>
 
-    <button type="submit">حفظ</button>
+    <label>صورة</label>
+    <input type="file" name="image" accept="image/*">
+
+    <div class="buttons">
+      <button class="save" type="submit">حفظ</button>
+      <button class="clear" type="reset">مسح الحقول</button>
+      <button class="sync" type="button" onclick="loadItems()">تحديث من السحابة</button>
+    </div>
+
+    <div class="note">
+      التخزين يتم في Google Sheets + الصور في Google Drive
+    </div>
   </form>
 
   <iframe name="hiddenFrame" style="display:none"></iframe>
@@ -116,40 +130,12 @@ button{
 
 </div>
 
-<!-- 🔒 إضافة آمنة فقط لعرض الصورة الكبيرة -->
-<div id="imageViewer" style="
-  display:none;
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,0.8);
-  z-index:9999;
-  justify-content:center;
-  align-items:center
-" onclick="this.style.display='none'">
-  <img id="viewerImg" style="max-width:90%;max-height:90%;border-radius:10px">
-</div>
-
-<!-- معرض الصور (كما هو) -->
-<div class="gallery-screen" id="galleryScreen">
-  <div style="display:flex;justify-content:space-between;align-items:center">
-    <h3>🖼️ معرض الصور</h3>
-    <span class="close" onclick="closeGallery()">✖</span>
-  </div>
-  <div class="gallery" id="galleryImages"></div>
-</div>
-
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbw4027olBqzmfcup0RmX-Rmqbtk7L5uniwLkZbxHyKmGKh6Au-UhXYQuiUKbSdtm7N1/exec";
+"https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec";
 
 let ITEMS=[];
 
-/* الأرفف */
-for(let i=1;i<=100;i++){
-  shelf.innerHTML+=`<option>${i}</option>`;
-}
-
-/* بعد الحفظ */
 function afterSubmit(){
   setTimeout(()=>{
     itemForm.reset();
@@ -157,69 +143,46 @@ function afterSubmit(){
   },1500);
 }
 
-/* تحميل */
 async function loadItems(){
   const r=await fetch(SCRIPT_URL+"?action=list");
   ITEMS=await r.json();
   renderItems(ITEMS);
 }
 
-/* عرض القائمة (لم نغيّر المنطق، فقط أضفنا onclick للصورة) */
 function renderItems(arr){
   items.innerHTML="";
   if(!arr.length){
-    items.innerHTML="لا توجد بيانات";
+    items.innerHTML="لا توجد عناصر";
     return;
   }
   arr.forEach((i,idx)=>{
     items.innerHTML+=`
       <div class="item">
-        ${i.image ? `<img src="${i.image}" onclick="showImage('${i.image}')">` : ``}
-        <div class="item-name" onclick="fillForm(${idx})">${i.name}</div>
+        ${i.image?`<img src="${i.image}">`:`<img>`}
+        <div class="item-info">
+          <b>${i.name}</b>
+          رف - ${i.shelf||"-"}
+        </div>
         <div class="item-actions">
-          <span onclick="fillForm(${idx})">✏️</span>
+          <button class="edit" onclick="fillForm(${idx})">تعديل</button>
         </div>
       </div>
     `;
   });
 }
 
-/* تعبئة النموذج (كما هو) */
-function fillForm(index){
-  const i=ITEMS[index];
-  itemName.value=i.name;
-  category.value=i.category;
-  shelf.value=i.shelf;
-  level.value=i.level;
-  notes.value=i.notes||"";
+function fillForm(i){
+  const d=ITEMS[i];
+  itemName.value=d.name;
+  document.querySelector('[name=category]').value=d.category||"";
+  document.querySelector('[name=shelf]').value=d.shelf||"";
+  document.querySelector('[name=level]').value=d.level||"";
+  document.querySelector('[name=notes]').value=d.notes||"";
 }
 
-/* بحث (كما هو) */
 function searchByName(){
   const q=searchInput.value.trim();
-  renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);
-}
-
-/* معرض الصور (كما هو) */
-function openGallery(){
-  galleryImages.innerHTML="";
-  ITEMS.forEach((i,idx)=>{
-    if(i.image){
-      galleryImages.innerHTML+=`
-        <img src="${i.image}" onclick="fillForm(${idx});closeGallery()">
-      `;
-    }
-  });
-  galleryScreen.style.display="block";
-}
-function closeGallery(){
-  galleryScreen.style.display="none";
-}
-
-/* ✅ إضافة آمنة: عرض الصورة كبيرة */
-function showImage(url){
-  viewerImg.src = url;
-  imageViewer.style.display = "flex";
+  renderItems(q?ITEMS.filter(i=>i.name.includes(q)):ITEMS);
 }
 
 loadItems();

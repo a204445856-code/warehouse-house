@@ -15,12 +15,14 @@ header{
   font-weight:bold;
   border-bottom:1px solid #e5e7eb
 }
+
 .container{
   display:grid;
   grid-template-columns:1fr 1.3fr;
   gap:20px;
   padding:20px
 }
+
 .card{
   background:#fff;
   border-radius:10px;
@@ -28,44 +30,127 @@ header{
   box-shadow:0 1px 4px rgba(0,0,0,.08)
 }
 
-/* القائمة */
-.search{margin-bottom:15px}
-.search input{
-  width:100%;padding:10px;border:1px solid #ddd;border-radius:8px
+/* ===== القائمة ===== */
+.search{
+  margin-bottom:15px
 }
+.search input{
+  width:100%;
+  padding:10px;
+  border:1px solid #ddd;
+  border-radius:8px
+}
+
 .item{
-  display:flex;gap:12px;align-items:center;
-  padding:10px;border:1px solid #eee;
-  border-radius:10px;margin-bottom:10px
+  display:flex;
+  gap:12px;
+  align-items:center;
+  padding:10px;
+  border:1px solid #eee;
+  border-radius:10px;
+  margin-bottom:10px
 }
 .item img{
-  width:60px;height:60px;object-fit:cover;
-  border-radius:8px;background:#eee
+  width:60px;
+  height:60px;
+  object-fit:cover;
+  border-radius:8px;
+  background:#eee
 }
-.item-info{flex:1}
-.item-info b{display:block;margin-bottom:4px}
+.item-info{
+  flex:1
+}
+.item-info b{
+  display:block;
+  margin-bottom:4px
+}
 .item-actions{
-  display:flex;flex-direction:column;gap:6px
+  display:flex;
+  flex-direction:column;
+  gap:6px
 }
 .item-actions button{
-  border:none;padding:6px 10px;border-radius:6px;
-  cursor:pointer;color:#fff;font-size:13px
+  border:none;
+  padding:6px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  color:#fff;
+  font-size:13px
 }
 .edit{background:#f59e0b}
 .delete{background:#ef4444}
 
-/* النموذج */
-label{font-size:13px;color:#374151;margin-top:10px;display:block}
+/* ===== النموذج ===== */
+label{
+  font-size:13px;
+  color:#374151;
+  margin-top:10px;
+  display:block
+}
 input,select,textarea{
-  width:100%;padding:10px;margin-top:5px;
-  border:1px solid #ddd;border-radius:8px
+  width:100%;
+  padding:10px;
+  margin-top:5px;
+  border:1px solid #ddd;
+  border-radius:8px;
+  background:#fff;
+  color:#111
 }
 textarea{resize:none;height:80px}
-.buttons{display:flex;gap:10px;margin-top:15px}
-.save{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
-.clear{background:#9ca3af;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
-.sync{background:#111827;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
-.note{margin-top:10px;font-size:12px;color:#6b7280}
+
+/* ✅ إصلاح القوائم المنسدلة */
+select{
+  appearance:auto;
+  -webkit-appearance:auto;
+  -moz-appearance:auto;
+  background-color:#fff;
+  color:#111;
+  cursor:pointer
+}
+select:focus{
+  outline:2px solid #2563eb;
+}
+
+/* ===== الأزرار ===== */
+.buttons{
+  display:flex;
+  gap:10px;
+  margin-top:15px
+}
+.save{
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:8px;
+  flex:1;
+  cursor:pointer
+}
+.clear{
+  background:#9ca3af;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:8px;
+  flex:1;
+  cursor:pointer
+}
+.sync{
+  background:#111827;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:8px;
+  flex:1;
+  cursor:pointer
+}
+
+/* ===== ملاحظة ===== */
+.note{
+  margin-top:10px;
+  font-size:12px;
+  color:#6b7280
+}
 
 @media(max-width:900px){
   .container{grid-template-columns:1fr}
@@ -79,114 +164,78 @@ textarea{resize:none;height:80px}
 
 <div class="container">
 
-<!-- القائمة -->
-<div class="card">
-  <div class="search">
-    <input id="searchInput" placeholder="ابحث بالاسم" oninput="searchByName()">
+  <!-- القائمة -->
+  <div class="card">
+    <div class="search">
+      <input placeholder="ابحث بالاسم أو رقم الرف">
+    </div>
+
+    <div class="item">
+      <img>
+      <div class="item-info">
+        <b>مثال</b>
+        رف - 1
+      </div>
+      <div class="item-actions">
+        <button class="delete">حذف</button>
+        <button class="edit">تعديل</button>
+      </div>
+    </div>
+
   </div>
-  <div id="items">جاري التحميل...</div>
-</div>
 
-<!-- الإدخال -->
-<div class="card">
-  <form id="itemForm"
-    action="https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec"
-    method="POST"
-    enctype="multipart/form-data"
-    target="hiddenFrame"
-    onsubmit="afterSubmit()">
-
+  <!-- الإدخال -->
+  <div class="card">
     <label>اسم الغرض *</label>
-    <input name="name" id="itemName" required>
+    <input>
 
-    <label>التصنيف</label>
-    <input name="category">
+    <label>التصنيف (اختياري)</label>
+    <input placeholder="أدوات / كهرباء / مطبخ">
 
-    <label>رقم الرف</label>
-    <input name="shelf">
+    <label>الجهة</label>
+    <select>
+      <option value="">اختر</option>
+      <option>يمين</option>
+      <option>يسار</option>
+    </select>
+
+    <label>رقم الرف *</label>
+    <input value="8">
 
     <label>المستوى</label>
-    <input name="level">
+    <select>
+      <option value="">اختر</option>
+      <option>أعلى</option>
+      <option>وسط</option>
+      <option>أسفل</option>
+    </select>
+
+    <label>منطقة / قسم</label>
+    <select>
+      <option value="">اختر</option>
+      <option>المستودع</option>
+      <option>المطبخ</option>
+      <option>الصالة</option>
+    </select>
 
     <label>ملاحظات</label>
-    <textarea name="notes"></textarea>
+    <textarea></textarea>
 
-    <label>صورة</label>
-    <input type="file" name="image" accept="image/*">
+    <label>صورة (اختياري)</label>
+    <input type="file">
 
     <div class="buttons">
-      <button class="save" type="submit">حفظ</button>
-      <button class="clear" type="reset">مسح الحقول</button>
-      <button class="sync" type="button" onclick="loadItems()">تحديث من السحابة</button>
+      <button class="save">حفظ</button>
+      <button class="clear">مسح الحقول</button>
+      <button class="sync">تحديث من السحابة</button>
     </div>
 
     <div class="note">
-      التخزين يتم في Google Sheets + الصور في Google Drive
+      التخزين يتم في Google Sheets + الصور في Google Drive (تظهر على كل الأجهزة)
     </div>
-  </form>
-
-  <iframe name="hiddenFrame" style="display:none"></iframe>
-</div>
+  </div>
 
 </div>
-
-<script>
-const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec";
-
-let ITEMS=[];
-
-function afterSubmit(){
-  setTimeout(()=>{
-    itemForm.reset();
-    loadItems();
-  },1500);
-}
-
-async function loadItems(){
-  const r=await fetch(SCRIPT_URL+"?action=list");
-  ITEMS=await r.json();
-  renderItems(ITEMS);
-}
-
-function renderItems(arr){
-  items.innerHTML="";
-  if(!arr.length){
-    items.innerHTML="لا توجد عناصر";
-    return;
-  }
-  arr.forEach((i,idx)=>{
-    items.innerHTML+=`
-      <div class="item">
-        ${i.image?`<img src="${i.image}">`:`<img>`}
-        <div class="item-info">
-          <b>${i.name}</b>
-          رف - ${i.shelf||"-"}
-        </div>
-        <div class="item-actions">
-          <button class="edit" onclick="fillForm(${idx})">تعديل</button>
-        </div>
-      </div>
-    `;
-  });
-}
-
-function fillForm(i){
-  const d=ITEMS[i];
-  itemName.value=d.name;
-  document.querySelector('[name=category]').value=d.category||"";
-  document.querySelector('[name=shelf]').value=d.shelf||"";
-  document.querySelector('[name=level]').value=d.level||"";
-  document.querySelector('[name=notes]').value=d.notes||"";
-}
-
-function searchByName(){
-  const q=searchInput.value.trim();
-  renderItems(q?ITEMS.filter(i=>i.name.includes(q)):ITEMS);
-}
-
-loadItems();
-</script>
 
 </body>
 </html>

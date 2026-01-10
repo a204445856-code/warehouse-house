@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -32,7 +31,7 @@ button{
   border-bottom:1px solid #eee;padding:6px 0
 }
 .item img{
-  width:40px;height:40px;object-fit:cover;border-radius:6px
+  width:40px;height:40px;object-fit:cover;border-radius:6px;cursor:pointer
 }
 .item-name{flex:1;cursor:pointer}
 .item-actions span{
@@ -75,13 +74,15 @@ button{
 <div class="card">
   <h3>إضافة / تعديل غرض</h3>
 
-  <!-- 🔑 النموذج الحقيقي -->
   <form id="itemForm"
-        action="https://script.google.com/macros/s/AKfycbypxng4ZhligW5tHyJSVh9Cek0T8n_80iRYH1Jx3sNxmTjWqCehihPqguQMaAKxDeVh/exec"
+        action="https://script.google.com/macros/s/AKfycbwWSXAijuehjDu0tvFNjzk3CyzR6a-9WCZjBKwbli0GZA8K49zRugUZEa4nwua0L0Qx/exec"
         method="POST"
         enctype="multipart/form-data"
         target="hiddenFrame"
         onsubmit="afterSubmit()">
+
+    <input type="hidden" name="id" id="rowId">
+    <input type="hidden" name="oldImage" id="oldImage">
 
     <input name="name" id="itemName" placeholder="اسم الغرض" required>
 
@@ -111,10 +112,22 @@ button{
     <button type="submit">حفظ</button>
   </form>
 
-  <!-- iframe مخفي -->
   <iframe name="hiddenFrame" style="display:none"></iframe>
 </div>
 
+</div>
+
+<!-- عارض الصورة -->
+<div id="imageViewer" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.8);
+  z-index:3000;
+  justify-content:center;
+  align-items:center
+">
+  <img id="viewerImg" style="max-width:90%;max-height:90%;border-radius:10px">
 </div>
 
 <!-- معرض الصور -->
@@ -128,7 +141,7 @@ button{
 
 <script>
 const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbypxng4ZhligW5tHyJSVh9Cek0T8n_80iRYH1Jx3sNxmTjWqCehihPqguQMaAKxDeVh/exec";
+"https://script.google.com/macros/s/AKfycbwWSXAijuehjDu0tvFNjzk3CyzR6a-9WCZjBKwbli0GZA8K49zRugUZEa4nwua0L0Qx/exec";
 
 let ITEMS=[];
 
@@ -140,9 +153,11 @@ for(let i=1;i<=100;i++){
 /* بعد الحفظ */
 function afterSubmit(){
   setTimeout(()=>{
-    itemForm.reset();
     loadItems();
-  },1500);
+    itemForm.reset();
+    rowId.value="";
+    oldImage.value="";
+  },2000);
 }
 
 /* تحميل */
@@ -159,14 +174,18 @@ function renderItems(arr){
     items.innerHTML="لا توجد بيانات";
     return;
   }
-  arr.forEach((i,idx)=>{
+
+  arr.forEach(i=>{
     items.innerHTML+=`
       <div class="item">
-        ${i.image ? `<img src="${i.image}">` : ``}
-        <div class="item-name" onclick="fillForm(${idx})">${i.name}</div>
+        ${i.image ? `
+          <img src="${i.image}&t=${Date.now()}"
+               onclick="showImage('${i.image}')">
+        ` : ``}
+        <div class="item-name" onclick="fillForm('${i.id}')">${i.name}</div>
         <div class="item-actions">
-          <span onclick="fillForm(${idx})">✏️</span>
-          <span onclick="removeUI(${idx})">🗑️</span>
+          <span onclick="fillForm('${i.id}')">✏️</span>
+          <span onclick="deleteItem('${i.id}','${i.image||""}')">🗑️</span>
         </div>
       </div>
     `;
@@ -174,8 +193,12 @@ function renderItems(arr){
 }
 
 /* تعبئة النموذج */
-function fillForm(index){
-  const i=ITEMS[index];
+function fillForm(id){
+  const i=ITEMS.find(x=>x.id==id);
+  if(!i) return;
+
+  rowId.value=i.id;
+  oldImage.value=i.image||"";
   itemName.value=i.name;
   category.value=i.category;
   shelf.value=i.shelf;
@@ -183,11 +206,17 @@ function fillForm(index){
   notes.value=i.notes||"";
 }
 
-/* حذف (واجهة فقط) */
-function removeUI(index){
-  if(!confirm("حذف من الواجهة فقط؟")) return;
-  ITEMS.splice(index,1);
-  renderItems(ITEMS);
+/* حذف */
+async function deleteItem(id,image){
+  if(!confirm("حذف الغرض نهائيًا؟")) return;
+
+  await fetch(SCRIPT_URL,{
+    method:"POST",
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:`action=delete&id=${id}&image=${encodeURIComponent(image)}`
+  });
+
+  loadItems();
 }
 
 /* بحث */
@@ -196,13 +225,20 @@ function searchByName(){
   renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);
 }
 
+/* عرض صورة */
+function showImage(url){
+  viewerImg.src=url;
+  imageViewer.style.display="flex";
+}
+imageViewer.onclick=()=>imageViewer.style.display="none";
+
 /* معرض الصور */
 function openGallery(){
   galleryImages.innerHTML="";
-  ITEMS.forEach((i,idx)=>{
+  ITEMS.forEach(i=>{
     if(i.image){
       galleryImages.innerHTML+=`
-        <img src="${i.image}" onclick="fillForm(${idx});closeGallery()">
+        <img src="${i.image}" onclick="fillForm('${i.id}');closeGallery()">
       `;
     }
   });

@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -6,36 +7,52 @@
 <title>مستودع البيت</title>
 
 <style>
-*{box-sizing:border-box;font-family:Tajawal,Arial}
-body{margin:0;background:#f3f4f6}
-header{background:#fff;padding:15px 25px;font-size:22px;font-weight:bold;border-bottom:1px solid #e5e7eb}
+body{font-family:Tahoma,Arial;background:#f5f6f7;margin:0}
+header{text-align:center;padding:20px;font-size:26px}
+.container{display:flex;gap:20px;padding:20px;flex-wrap:wrap}
+.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);flex:1;min-width:320px}
 
-.container{display:grid;grid-template-columns:1fr 1.3fr;gap:20px;padding:20px}
-.card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
-
-label{font-size:13px;color:#374151;margin-top:10px;display:block}
-input,select,textarea{
-  width:100%;padding:10px;margin-top:5px;
-  border:1px solid #ddd;border-radius:8px;
-  background:#fff;color:#111
+input,select,textarea,button{
+  width:100%;padding:8px;margin-top:6px;font-size:14px
 }
-textarea{resize:none;height:80px}
-
-select{
-  appearance:auto;
-  -webkit-appearance:auto;
-  -moz-appearance:auto;
+button{
+  background:#2563eb;color:#fff;border:none;
+  border-radius:6px;padding:10px;cursor:pointer
 }
 
-.buttons{display:flex;gap:10px;margin-top:15px}
-.save{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:8px;flex:1;cursor:pointer}
-.clear{background:#9ca3af;color:#fff;border:none;padding:10px;border-radius:8px;flex:1;cursor:pointer}
-
-.note{margin-top:10px;font-size:12px;color:#6b7280}
-
-@media(max-width:900px){
-  .container{grid-template-columns:1fr}
+.top-bar{display:flex;gap:8px;align-items:center}
+.icon-btn{
+  background:#2563eb;color:#fff;border:none;
+  border-radius:6px;padding:6px 10px;
+  font-size:18px;cursor:pointer
 }
+
+.item{
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid #eee;padding:6px 0
+}
+.item img{
+  width:40px;height:40px;object-fit:cover;border-radius:6px
+}
+.item-name{flex:1;cursor:pointer}
+.item-actions span{
+  cursor:pointer;margin-right:6px;font-size:18px
+}
+
+/* معرض الصور */
+.gallery-screen{
+  display:none;position:fixed;inset:0;
+  background:#fff;z-index:1000;
+  padding:20px;overflow:auto
+}
+.gallery{
+  display:flex;flex-wrap:wrap;gap:10px
+}
+.gallery img{
+  width:90px;height:90px;object-fit:cover;
+  border-radius:6px;cursor:pointer
+}
+.close{font-size:20px;cursor:pointer}
 </style>
 </head>
 
@@ -45,67 +62,157 @@ select{
 
 <div class="container">
 
-  <!-- الإدخال -->
-  <div class="card">
-    <!-- ✅ الفورم مربوط بالحفظ -->
-    <form id="itemForm"
-      action="https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec"
-      method="POST"
-      enctype="multipart/form-data"
-      target="hiddenFrame">
-
-      <label>اسم الغرض *</label>
-      <input name="name" required>
-
-      <label>التصنيف</label>
-      <input name="category">
-
-      <label>رقم الرف *</label>
-      <!-- ✅ قائمة الأرفف -->
-      <select name="shelf" id="shelf" required>
-        <option value="">اختر رقم الرف</option>
-      </select>
-
-      <label>المستوى</label>
-      <select name="level">
-        <option value="">اختر</option>
-        <option>أعلى</option>
-        <option>وسط</option>
-        <option>أسفل</option>
-      </select>
-
-      <label>ملاحظات</label>
-      <textarea name="notes"></textarea>
-
-      <label>صورة (اختياري)</label>
-      <input type="file" name="image" accept="image/*">
-
-      <div class="buttons">
-        <!-- ✅ زر حفظ حقيقي -->
-        <button class="save" type="submit">حفظ</button>
-        <button class="clear" type="reset">مسح الحقول</button>
-      </div>
-
-      <div class="note">
-        التخزين يتم في Google Sheets + الصور في Google Drive
-      </div>
-    </form>
-
-    <!-- iframe للحفظ بدون إعادة تحميل -->
-    <iframe name="hiddenFrame" style="display:none"></iframe>
+<!-- القائمة -->
+<div class="card">
+  <div class="top-bar">
+    <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
+    <button class="icon-btn" onclick="openGallery()">🖼️</button>
   </div>
+  <div id="items">جاري التحميل...</div>
+</div>
+
+<!-- الإدخال -->
+<div class="card">
+  <h3>إضافة / تعديل غرض</h3>
+
+  <!-- 🔑 النموذج الحقيقي -->
+  <form id="itemForm"
+        action="https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec"
+        method="POST"
+        enctype="multipart/form-data"
+        target="hiddenFrame"
+        onsubmit="afterSubmit()">
+
+    <input name="name" id="itemName" placeholder="اسم الغرض" required>
+
+    <select name="category" id="category">
+      <option value="">المنطقة / القسم</option>
+      <option>مستودع يمين</option>
+      <option>مستودع يسار</option>
+      <option>مطبخ</option>
+      <option>صالة</option>
+      <option>غرفة البنات</option>
+      <option>غرفة الأولاد</option>
+      <option>غرفة النوم</option>
+    </select>
+
+    <select name="shelf" id="shelf"><option value="">رقم الرف</option></select>
+
+    <select name="level" id="level">
+      <option value="">المستوى</option>
+      <option>أعلى</option>
+      <option>وسط</option>
+      <option>أسفل</option>
+    </select>
+
+    <textarea name="notes" id="notes" placeholder="ملاحظات"></textarea>
+    <input type="file" name="image" id="image" accept="image/*">
+
+    <button type="submit">حفظ</button>
+  </form>
+
+  <!-- iframe مخفي -->
+  <iframe name="hiddenFrame" style="display:none"></iframe>
+</div>
 
 </div>
 
+<!-- معرض الصور -->
+<div class="gallery-screen" id="galleryScreen">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h3>🖼️ معرض الصور</h3>
+    <span class="close" onclick="closeGallery()">✖</span>
+  </div>
+  <div class="gallery" id="galleryImages"></div>
+</div>
+
 <script>
-/* ✅ تعبئة قائمة الأرفف (1 → 100) */
-const shelfSelect = document.getElementById("shelf");
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec";
+
+let ITEMS=[];
+
+/* الأرفف */
 for(let i=1;i<=100;i++){
-  const opt = document.createElement("option");
-  opt.value = i;
-  opt.textContent = i;
-  shelfSelect.appendChild(opt);
+  shelf.innerHTML+=`<option>${i}</option>`;
 }
+
+/* بعد الحفظ */
+function afterSubmit(){
+  setTimeout(()=>{
+    itemForm.reset();
+    loadItems();
+  },1500);
+}
+
+/* تحميل */
+async function loadItems(){
+  const r=await fetch(SCRIPT_URL+"?action=list");
+  ITEMS=await r.json();
+  renderItems(ITEMS);
+}
+
+/* عرض القائمة */
+function renderItems(arr){
+  items.innerHTML="";
+  if(!arr.length){
+    items.innerHTML="لا توجد بيانات";
+    return;
+  }
+  arr.forEach((i,idx)=>{
+    items.innerHTML+=`
+      <div class="item">
+        ${i.image ? `<img src="${i.image}">` : ``}
+        <div class="item-name" onclick="fillForm(${idx})">${i.name}</div>
+        <div class="item-actions">
+          <span onclick="fillForm(${idx})">✏️</span>
+          <span onclick="removeUI(${idx})">🗑️</span>
+        </div>
+      </div>
+    `;
+  });
+}
+
+/* تعبئة النموذج */
+function fillForm(index){
+  const i=ITEMS[index];
+  itemName.value=i.name;
+  category.value=i.category;
+  shelf.value=i.shelf;
+  level.value=i.level;
+  notes.value=i.notes||"";
+}
+
+/* حذف (واجهة فقط) */
+function removeUI(index){
+  if(!confirm("حذف من الواجهة فقط؟")) return;
+  ITEMS.splice(index,1);
+  renderItems(ITEMS);
+}
+
+/* بحث */
+function searchByName(){
+  const q=searchInput.value.trim();
+  renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);
+}
+
+/* معرض الصور */
+function openGallery(){
+  galleryImages.innerHTML="";
+  ITEMS.forEach((i,idx)=>{
+    if(i.image){
+      galleryImages.innerHTML+=`
+        <img src="${i.image}" onclick="fillForm(${idx});closeGallery()">
+      `;
+    }
+  });
+  galleryScreen.style.display="block";
+}
+function closeGallery(){
+  galleryScreen.style.display="none";
+}
+
+loadItems();
 </script>
 
 </body>

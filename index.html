@@ -4,13 +4,18 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>مستودع البيت</title>
+
 <style>
 body{font-family:Tahoma,Arial;background:#f5f6f7;margin:0}
 header{text-align:center;padding:20px;font-size:26px}
 .container{display:flex;gap:20px;padding:20px;flex-wrap:wrap}
-.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);flex:1;min-width:320px}
+.card{
+  background:#fff;border-radius:10px;padding:15px;
+  box-shadow:0 2px 6px rgba(0,0,0,.1);
+  flex:1;min-width:320px
+}
 
-input,select,textarea,button{
+input,textarea,button{
   width:100%;padding:8px;margin-top:6px;font-size:14px
 }
 button{
@@ -66,51 +71,23 @@ button{
     <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
     <button class="icon-btn" onclick="openGallery()">🖼️</button>
   </div>
+
+  <button style="margin-top:8px" onclick="openForm()">➕ إضافة غرض (مع صورة)</button>
+
   <div id="items">جاري التحميل...</div>
 </div>
 
-<!-- الإدخال -->
+<!-- العرض -->
 <div class="card">
-  <h3>إضافة / تعديل غرض</h3>
+  <h3>بيانات الغرض</h3>
 
-  <!-- 🔑 النموذج الحقيقي -->
-  <form id="itemForm"
-        action="https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec"
-        method="POST"
-        enctype="multipart/form-data"
-        target="hiddenFrame"
-        onsubmit="afterSubmit()">
+  <input id="v_name" placeholder="اسم الغرض" readonly>
+  <input id="v_category" placeholder="القسم" readonly>
+  <input id="v_shelf" placeholder="رقم الرف" readonly>
+  <input id="v_level" placeholder="المستوى" readonly>
+  <textarea id="v_notes" placeholder="ملاحظات" readonly></textarea>
 
-    <input name="name" id="itemName" placeholder="اسم الغرض" required>
-
-    <select name="category" id="category">
-      <option value="">المنطقة / القسم</option>
-      <option>مستودع يمين</option>
-      <option>مستودع يسار</option>
-      <option>مطبخ</option>
-      <option>صالة</option>
-      <option>غرفة البنات</option>
-      <option>غرفة الأولاد</option>
-      <option>غرفة النوم</option>
-    </select>
-
-    <select name="shelf" id="shelf"><option value="">رقم الرف</option></select>
-
-    <select name="level" id="level">
-      <option value="">المستوى</option>
-      <option>أعلى</option>
-      <option>وسط</option>
-      <option>أسفل</option>
-    </select>
-
-    <textarea name="notes" id="notes" placeholder="ملاحظات"></textarea>
-    <input type="file" name="image" id="image" accept="image/*">
-
-    <button type="submit">حفظ</button>
-  </form>
-
-  <!-- iframe مخفي -->
-  <iframe name="hiddenFrame" style="display:none"></iframe>
+  <img id="v_image" style="max-width:100%;margin-top:10px;border-radius:8px;display:none">
 </div>
 
 </div>
@@ -125,28 +102,44 @@ button{
 </div>
 
 <script>
-const SCRIPT_URL =
-"https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec";
+/*
+⚠️ غيّري هذا فقط
+ضعـي رابط Google Form هنا
+*/
+const GOOGLE_FORM_URL = "PUT_GOOGLE_FORM_LINK_HERE";
+
+/*
+⚠️ غيّري هذا
+رابط Google Sheet بصيغة JSON
+*/
+const SHEET_JSON_URL =
+"https://docs.google.com/spreadsheets/d/1foENTEF7sgI5bHaPNq1nIe4JD9Boo1kbnetJWwIa9Fg/gviz/tq?tqx=out:json";
 
 let ITEMS=[];
 
-/* الأرفف */
-for(let i=1;i<=100;i++){
-  shelf.innerHTML+=`<option>${i}</option>`;
+/* فتح النموذج */
+function openForm(){
+  window.open(GOOGLE_FORM_URL,"_blank");
 }
 
-/* بعد الحفظ */
-function afterSubmit(){
-  setTimeout(()=>{
-    itemForm.reset();
-    loadItems();
-  },1500);
-}
-
-/* تحميل */
+/* تحميل البيانات */
 async function loadItems(){
-  const r=await fetch(SCRIPT_URL+"?action=list");
-  ITEMS=await r.json();
+  const r = await fetch(SHEET_JSON_URL);
+  const text = await r.text();
+  const json = JSON.parse(text.substring(47).slice(0,-2));
+
+  ITEMS = json.table.rows.map(r=>{
+    const c=r.c;
+    return {
+      name: c[1]?.v || "",
+      category: c[2]?.v || "",
+      shelf: c[3]?.v || "",
+      level: c[4]?.v || "",
+      notes: c[5]?.v || "",
+      image: c[6]?.v || ""
+    };
+  }).filter(i=>i.name);
+
   renderItems(ITEMS);
 }
 
@@ -160,32 +153,27 @@ function renderItems(arr){
   arr.forEach((i,idx)=>{
     items.innerHTML+=`
       <div class="item">
-        ${i.image ? `<img src="${i.image}">` : ``}
-        <div class="item-name" onclick="fillForm(${idx})">${i.name}</div>
-        <div class="item-actions">
-          <span onclick="fillForm(${idx})">✏️</span>
-          <span onclick="removeUI(${idx})">🗑️</span>
-        </div>
+        ${i.image?`<img src="${i.image}">`:``}
+        <div class="item-name" onclick="showItem(${idx})">${i.name}</div>
       </div>
     `;
   });
 }
 
-/* تعبئة النموذج */
-function fillForm(index){
+/* عرض البيانات */
+function showItem(index){
   const i=ITEMS[index];
-  itemName.value=i.name;
-  category.value=i.category;
-  shelf.value=i.shelf;
-  level.value=i.level;
-  notes.value=i.notes||"";
-}
-
-/* حذف (واجهة فقط) */
-function removeUI(index){
-  if(!confirm("حذف من الواجهة فقط؟")) return;
-  ITEMS.splice(index,1);
-  renderItems(ITEMS);
+  v_name.value=i.name;
+  v_category.value=i.category;
+  v_shelf.value=i.shelf;
+  v_level.value=i.level;
+  v_notes.value=i.notes;
+  if(i.image){
+    v_image.src=i.image;
+    v_image.style.display="block";
+  }else{
+    v_image.style.display="none";
+  }
 }
 
 /* بحث */
@@ -200,7 +188,7 @@ function openGallery(){
   ITEMS.forEach((i,idx)=>{
     if(i.image){
       galleryImages.innerHTML+=`
-        <img src="${i.image}" onclick="fillForm(${idx});closeGallery()">
+        <img src="${i.image}" onclick="showItem(${idx});closeGallery()">
       `;
     }
   });

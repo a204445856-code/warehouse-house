@@ -10,6 +10,7 @@ body{
   background:#f5f6f7;
   padding:20px;
 }
+h2{text-align:center}
 .container{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -31,38 +32,50 @@ button{cursor:pointer}
   justify-content:space-between;
   align-items:center;
   border-bottom:1px solid #ddd;
-  padding:10px 0;
+  padding:8px 0;
+}
+.item-right{
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 .item img{
   width:60px;
   height:60px;
   object-fit:cover;
   border-radius:4px;
+  cursor:pointer;
 }
-.actions{
-  display:flex;
-  flex-direction:column;
-  gap:5px;
+.btn-edit{
+  background:#f59e0b;
+  color:#fff;
+  border:none;
+  padding:6px 8px;
+  border-radius:4px;
 }
-.actions button{
-  font-size:12px;
+.btn-delete{
+  background:#ef4444;
+  color:#fff;
+  border:none;
+  padding:6px 8px;
+  border-radius:4px;
 }
 </style>
 </head>
 
 <body>
 
-<h2 style="text-align:center">📦 مستودع البيت</h2>
+<h2>📦 مستودع البيت</h2>
 
 <div class="container">
 
 <!-- النموذج -->
 <div class="card">
-<h3>إضافة عنصر جديد</h3>
+<h3>إضافة / تعديل</h3>
 
 <input id="name" placeholder="اسم الغرض *">
 
-<label>رقم الرف</label>
+<label>رقم الرف *</label>
 <select id="shelf"></select>
 
 <label>المكان</label>
@@ -85,7 +98,8 @@ button{cursor:pointer}
 <textarea id="notes" placeholder="ملاحظات"></textarea>
 <input type="file" id="image">
 
-<button id="addBtn">➕ إضافة جديدة</button>
+<button id="saveBtn">💾 حفظ</button>
+<button onclick="clearForm()">🧹 مسح</button>
 <p id="msg"></p>
 </div>
 
@@ -99,7 +113,7 @@ button{cursor:pointer}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 const firebaseConfig = {
@@ -123,44 +137,60 @@ const imageInput = document.getElementById("image");
 const list = document.getElementById("list");
 const msg = document.getElementById("msg");
 
+let editId = null;
 let cache = [];
-let editingId = null;
 
-/* إنشاء الرفوف */
+/* أرقام الرفوف 1–100 */
 for(let i=1;i<=100;i++){
-  const o=document.createElement("option");
-  o.value=i;
-  o.textContent="رف "+i;
-  shelfSelect.appendChild(o);
+  const opt=document.createElement("option");
+  opt.value=i;
+  opt.textContent="رف "+i;
+  shelfSelect.appendChild(opt);
 }
 
-/* إضافة عنصر جديد */
-document.getElementById("addBtn").onclick = async ()=>{
+document.getElementById("saveBtn").onclick = async ()=>{
   if(!nameInput.value || !shelfSelect.value){
     msg.innerText="❌ الاسم ورقم الرف مطلوبين";
     return;
   }
 
   let imageUrl="";
+
   if(imageInput.files[0]){
-    const r=ref(storage,"images/"+Date.now());
-    await uploadBytes(r,imageInput.files[0]);
-    imageUrl=await getDownloadURL(r);
+    const imgRef=ref(storage,"images/"+Date.now());
+    await uploadBytes(imgRef,imageInput.files[0]);
+    imageUrl=await getDownloadURL(imgRef);
   }
 
-  await addDoc(collection(db,"items"),{
+  const data={
     name:nameInput.value,
     shelf:shelfSelect.value,
     place:placeSelect.value,
     notes:notesInput.value,
     image:imageUrl
-  });
+  };
+
+  if(editId){
+    const old=cache.find(x=>x.id===editId);
+    await updateDoc(doc(db,"items",editId), imageUrl?data:{...data,image:old.image});
+    editId=null;
+  }else{
+    await addDoc(collection(db,"items"),data);
+  }
 
   clearForm();
   loadData();
 };
 
-/* تحميل العناصر */
+function clearForm(){
+  nameInput.value="";
+  shelfSelect.value="";
+  placeSelect.value="";
+  notesInput.value="";
+  imageInput.value="";
+  msg.innerText="";
+}
+
 async function loadData(){
   list.innerHTML="";
   cache=[];
@@ -177,20 +207,16 @@ async function loadData(){
         <b>${x.name}</b><br>
         رف ${x.shelf} - ${x.place||""}
       </div>
-
-      <div style="display:flex;gap:10px;align-items:center">
-        ${x.image?`<img src="${x.image}">`:""}
-        <div class="actions">
-          <button onclick="editItem('${x.id}')">✏️ تعديل</button>
-          <button onclick="saveItem('${x.id}')">💾 حفظ</button>
-        </div>
+      <div class="item-right">
+        ${x.image?`<img src="${x.image}" onclick="editItem('${x.id}')">`:""}
+        <button class="btn-edit" onclick="editItem('${x.id}')">✏️</button>
+        <button class="btn-delete" onclick="deleteItem('${x.id}')">🗑️</button>
       </div>
     `;
     list.appendChild(div);
   });
 }
 
-/* تعديل */
 window.editItem=function(id){
   const x=cache.find(i=>i.id===id);
   if(!x)return;
@@ -199,39 +225,17 @@ window.editItem=function(id){
   shelfSelect.value=x.shelf;
   placeSelect.value=x.place;
   notesInput.value=x.notes;
-  editingId=id;
+  editId=id;
 
   window.scrollTo({top:0,behavior:"smooth"});
 };
 
-/* حفظ التعديل */
-window.saveItem=async function(id){
-  const x=cache.find(i=>i.id===id);
-  if(!x)return;
-
-  const data={
-    name:nameInput.value,
-    shelf:shelfSelect.value,
-    place:placeSelect.value,
-    notes:notesInput.value,
-    image:x.image
-  };
-
-  await updateDoc(doc(db,"items",id),data);
-  editingId=null;
-  clearForm();
-  loadData();
+window.deleteItem=async function(id){
+  if(confirm("هل تريد حذف هذا العنصر؟")){
+    await deleteDoc(doc(db,"items",id));
+    loadData();
+  }
 };
-
-/* مسح النموذج */
-function clearForm(){
-  nameInput.value="";
-  shelfSelect.value="";
-  placeSelect.value="";
-  notesInput.value="";
-  imageInput.value="";
-  msg.innerText="";
-}
 
 loadData();
 </script>

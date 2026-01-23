@@ -49,29 +49,35 @@
   const storage = getStorage(app);
 
   async function addItem() {
-    const name = document.getElementById("name").value;
-    const qty = document.getElementById("qty").value;
-    const file = document.getElementById("image").files[0];
+    try {
+      const name = document.getElementById("name").value;
+      const qty = document.getElementById("qty").value;
+      const file = document.getElementById("image").files[0];
 
-    if (!name || !qty || !file) {
-      alert("املأ جميع الحقول");
-      return;
+      if (!name || !qty || !file) {
+        alert("املأ جميع الحقول");
+        return;
+      }
+
+      document.getElementById("msg").innerText = "جاري الحفظ...";
+
+      const imgRef = ref(storage, "images/" + Date.now() + "_" + file.name);
+      await uploadBytes(imgRef, file);
+      const imgURL = await getDownloadURL(imgRef);
+
+      await addDoc(collection(db, "items"), {
+        name,
+        qty,
+        image: imgURL
+      });
+
+      document.getElementById("msg").innerText = "✅ تم الحفظ";
+      loadItems();
+
+    } catch (e) {
+      document.getElementById("msg").innerText = "❌ خطأ: " + e.message;
+      console.error(e);
     }
-
-    document.getElementById("msg").innerText = "جاري الحفظ...";
-
-    const imgRef = ref(storage, "images/" + Date.now() + "_" + file.name);
-    await uploadBytes(imgRef, file);
-    const imgURL = await getDownloadURL(imgRef);
-
-    await addDoc(collection(db, "items"), {
-      name,
-      qty,
-      image: imgURL
-    });
-
-    document.getElementById("msg").innerText = "✅ تم الحفظ";
-    loadItems();
   }
 
   async function loadItems() {
@@ -91,6 +97,7 @@
     });
   }
 
+  window.addItem = addItem;
   loadItems();
 </script>
 

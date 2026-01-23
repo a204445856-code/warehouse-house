@@ -2,68 +2,97 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>رفع صورة Firebase</title>
+  <title>برنامج المستودع</title>
 </head>
-<body>
+<body dir="rtl">
 
-  <h2>رفع صورة (اختبار)</h2>
+<h2>إضافة صنف جديد</h2>
 
-  <input type="file" id="image" />
-  <br><br>
-  <button id="uploadBtn">رفع الصورة</button>
+<input type="text" id="name" placeholder="اسم الصنف"><br><br>
+<input type="number" id="qty" placeholder="الكمية"><br><br>
+<input type="file" id="image"><br><br>
 
-  <p id="result"></p>
+<button onclick="addItem()">حفظ الصنف</button>
 
-  <script type="module">
-    // Firebase SDKs
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-    import { getStorage, ref, uploadBytes, getDownloadURL } 
-      from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+<p id="msg"></p>
 
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
-      authDomain: "warehouse-house.firebaseapp.com",
-      projectId: "warehouse-house",
-      storageBucket: "warehouse-house.firebasestorage.app",
-      messagingSenderId: "791378856906",
-      appId: "1:791378856906:web:69aa95b1c53e2791865d33"
-    };
+<hr>
 
-    // Init Firebase
-    const app = initializeApp(firebaseConfig);
-    const storage = getStorage(app);
+<h2>الأصناف</h2>
+<table border="1" cellpadding="10">
+  <thead>
+    <tr>
+      <th>الصورة</th>
+      <th>الاسم</th>
+      <th>الكمية</th>
+    </tr>
+  </thead>
+  <tbody id="items"></tbody>
+</table>
 
-    // ربط الزر
-    const uploadBtn = document.getElementById("uploadBtn");
-    const imageInput = document.getElementById("image");
-    const result = document.getElementById("result");
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-    uploadBtn.addEventListener("click", async () => {
-      const file = imageInput.files[0];
+  const firebaseConfig = {
+    apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
+    authDomain: "warehouse-house.firebaseapp.com",
+    projectId: "warehouse-house",
+    storageBucket: "warehouse-house.firebasestorage.app",
+    messagingSenderId: "791378856906",
+    appId: "1:791378856906:web:69aa95b1c53e2791865d33"
+  };
 
-      if (!file) {
-        alert("اختر صورة أولاً");
-        return;
-      }
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const storage = getStorage(app);
 
-      try {
-        result.innerText = "⏳ جاري رفع الصورة...";
+  async function addItem() {
+    const name = document.getElementById("name").value;
+    const qty = document.getElementById("qty").value;
+    const file = document.getElementById("image").files[0];
 
-        const imageRef = ref(storage, "images/" + file.name);
-        await uploadBytes(imageRef, file);
+    if (!name || !qty || !file) {
+      alert("املأ جميع الحقول");
+      return;
+    }
 
-        const url = await getDownloadURL(imageRef);
-        result.innerHTML = `
-          ✅ تم رفع الصورة<br>
-          <a href="${url}" target="_blank">عرض الصورة</a>
-        `;
-      } catch (error) {
-        console.error(error);
-        result.innerText = "❌ حصل خطأ أثناء الرفع";
-      }
+    document.getElementById("msg").innerText = "جاري الحفظ...";
+
+    const imgRef = ref(storage, "images/" + Date.now() + "_" + file.name);
+    await uploadBytes(imgRef, file);
+    const imgURL = await getDownloadURL(imgRef);
+
+    await addDoc(collection(db, "items"), {
+      name,
+      qty,
+      image: imgURL
     });
-  </script>
+
+    document.getElementById("msg").innerText = "✅ تم الحفظ";
+    loadItems();
+  }
+
+  async function loadItems() {
+    const tbody = document.getElementById("items");
+    tbody.innerHTML = "";
+
+    const querySnapshot = await getDocs(collection(db, "items"));
+    querySnapshot.forEach(doc => {
+      const d = doc.data();
+      tbody.innerHTML += `
+        <tr>
+          <td><img src="${d.image}" width="80"></td>
+          <td>${d.name}</td>
+          <td>${d.qty}</td>
+        </tr>
+      `;
+    });
+  }
+
+  loadItems();
+</script>
 
 </body>
 </html>

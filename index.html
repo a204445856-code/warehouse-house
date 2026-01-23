@@ -2,24 +2,22 @@
 <html lang="ar">
 <head>
   <meta charset="UTF-8">
-  <title>Warehouse House</title>
+  <title>اختبار Firebase</title>
 </head>
 <body>
 
-  <h2>إضافة غرض</h2>
+  <h2>رفع صورة (اختبار)</h2>
 
-  <input type="text" id="name" placeholder="اسم الغرض"><br><br>
+  <input type="file" id="image">
+  <br><br>
+  <button onclick="upload()">رفع الصورة</button>
 
-  <input type="file" id="image"><br><br>
+  <p id="result"></p>
 
-  <button onclick="submitForm()">حفظ</button>
-
-  <!-- ================= Firebase ================= -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-    // ✅ firebaseConfig الصحيح
     const firebaseConfig = {
       apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
       authDomain: "warehouse-house.firebaseapp.com",
@@ -32,42 +30,20 @@
     const app = initializeApp(firebaseConfig);
     const storage = getStorage(app);
 
-    // رفع الصورة إلى Firebase Storage
-    window.uploadImageToFirebase = async function (file) {
-      const imageRef = ref(
-        storage,
-        "images/" + Date.now() + "_" + file.name
-      );
-      await uploadBytes(imageRef, file);
-      return await getDownloadURL(imageRef);
-    };
-  </script>
-
-  <!-- ================= إرسال البيانات إلى Google Sheet ================= -->
-  <script>
-    async function submitForm() {
-      const name = document.getElementById("name").value;
+    window.upload = async function () {
       const file = document.getElementById("image").files[0];
-
-      if (!name || !file) {
-        alert("الرجاء إدخال الاسم واختيار صورة");
+      if (!file) {
+        alert("اختر صورة أولًا");
         return;
       }
 
-      // 1️⃣ رفع الصورة
-      const imageUrl = await uploadImageToFirebase(file);
+      const imageRef = ref(storage, "images/" + Date.now() + "_" + file.name);
+      await uploadBytes(imageRef, file);
+      const url = await getDownloadURL(imageRef);
 
-      // 2️⃣ إرسال البيانات إلى Google Apps Script
-      fetch("PUT_YOUR_GOOGLE_SCRIPT_URL", {
-        method: "POST",
-        body: JSON.stringify({
-          name: name,
-          image: imageUrl
-        })
-      })
-      .then(() => alert("تم الحفظ بنجاح ✅"))
-      .catch(() => alert("حدث خطأ ❌"));
-    }
+      document.getElementById("result").innerText =
+        "تم رفع الصورة ✅\nالرابط:\n" + url;
+    };
   </script>
 
 </body>

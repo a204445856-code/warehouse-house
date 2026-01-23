@@ -1,147 +1,189 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<title>نظام حفظ الصور</title>
-
-<!-- أيقونات -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<title>مستودع البيت</title>
 
 <style>
-body {
-  font-family: Arial;
-  direction: rtl;
-  padding: 20px;
+body{
+  font-family: Tahoma, Arial;
+  background:#f5f6f8;
+  margin:0;
+  padding:20px;
 }
 
-.menu {
-  position: relative;
-  display: inline-block;
+h1{
+  margin-bottom:15px;
 }
 
-.menu button {
-  font-size: 20px;
-  padding: 10px 15px;
-  cursor: pointer;
+.container{
+  display:grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap:20px;
 }
 
-.dropdown {
-  display: none;
-  position: absolute;
-  background: #f9f9f9;
-  min-width: 220px;
-  box-shadow: 0 0 10px #ccc;
-  border-radius: 5px;
+/* القائمة */
+.list{
+  background:#fff;
+  border-radius:10px;
+  padding:15px;
 }
 
-.dropdown div {
-  padding: 12px;
-  cursor: pointer;
+.search{
+  width:100%;
+  padding:10px;
+  margin-bottom:15px;
+  border:1px solid #ccc;
+  border-radius:6px;
 }
 
-.dropdown div:hover {
-  background: #eee;
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:10px;
+  border:1px solid #eee;
+  border-radius:8px;
+  margin-bottom:10px;
 }
 
-.section {
-  margin-top: 25px;
-  display: none;
+.item img{
+  width:60px;
+  height:60px;
+  object-fit:cover;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+
+.buttons button{
+  margin-left:5px;
+  padding:6px 10px;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
+}
+
+.edit{background:#f59e0b;color:#fff;}
+.delete{background:#ef4444;color:#fff;}
+
+/* النموذج */
+.form{
+  background:#fff;
+  border-radius:10px;
+  padding:15px;
+}
+
+.form label{
+  display:block;
+  margin-top:10px;
+  font-weight:bold;
+}
+
+.form input, .form textarea{
+  width:100%;
+  padding:8px;
+  margin-top:5px;
+  border:1px solid #ccc;
+  border-radius:6px;
+}
+
+.form-buttons{
+  margin-top:15px;
+}
+
+.save{
+  background:#2563eb;
+  color:#fff;
+  padding:10px 15px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.clear{
+  background:#9ca3af;
+  color:#fff;
+  padding:10px 15px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.note{
+  margin-top:10px;
+  color:#555;
+  font-size:13px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📦 نظام حفظ وبحث الصور</h2>
+<h1>📦 مستودع البيت</h1>
 
-<!-- القائمة -->
-<div class="menu">
-  <button onclick="toggleMenu()">☰ القائمة</button>
-  <div id="dropdown" class="dropdown">
+<div class="container">
 
-    <div onclick="showSection('upload')">
-      <i class="fa fa-folder-open"></i> حفظ الصور
-    </div>
+  <!-- القائمة -->
+  <div class="list">
+    <input class="search" placeholder="ابحث بالاسم أو رقم الرف">
 
-    <div onclick="showSection('searchName')">
-      <i class="fa fa-search"></i> البحث بالاسم
-    </div>
-
-    <div onclick="showSection('searchImage')">
-      <i class="fa fa-image"></i> البحث بالصورة
+    <div class="item">
+      <div>
+        <strong>ddgdg</strong><br>
+        رف - 8
+      </div>
+      <div>
+        <img src="">
+        <div class="buttons">
+          <button class="edit">تعديل</button>
+          <button class="delete">حذف</button>
+        </div>
+      </div>
     </div>
 
   </div>
+
+  <!-- النموذج -->
+  <div class="form">
+    <label>اسم الغرض *</label>
+    <input id="name">
+
+    <label>التصنيف (اختياري)</label>
+    <input id="category">
+
+    <label>رقم الرف *</label>
+    <input id="shelf">
+
+    <label>المكان</label>
+    <input id="location">
+
+    <label>ملاحظات</label>
+    <textarea id="notes"></textarea>
+
+    <label>صورة (اختياري)</label>
+    <input type="file" id="image">
+
+    <div class="form-buttons">
+      <button class="save" onclick="saveItem()">حفظ</button>
+      <button class="clear" onclick="clearForm()">مسح الحقول</button>
+    </div>
+
+    <div class="note">
+      التخزين يتم في Firebase (الصور + البيانات)
+    </div>
+  </div>
+
 </div>
-
-<!-- حفظ الصور -->
-<div id="upload" class="section">
-  <h3>📂 حفظ صورة</h3>
-  <input type="text" id="imageName" placeholder="اسم الصورة"><br><br>
-  <input type="file" id="imageFile"><br><br>
-  <button onclick="uploadImage()">رفع الصورة</button>
-  <p id="uploadResult"></p>
-</div>
-
-<!-- البحث بالاسم -->
-<div id="searchName" class="section">
-  <h3>🔍 البحث بالاسم</h3>
-  <input type="text" placeholder="اكتب الاسم">
-  <button>بحث</button>
-</div>
-
-<!-- البحث بالصورة -->
-<div id="searchImage" class="section">
-  <h3>🖼️ البحث بالصورة</h3>
-  <input type="file">
-  <button>بحث</button>
-</div>
-
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
-  authDomain: "warehouse-house.firebaseapp.com",
-  projectId: "warehouse-house",
-  storageBucket: "warehouse-house.firebasestorage.app",
-  messagingSenderId: "791378856906",
-  appId: "1:791378856906:web:69aa95b1c53e2791865d33"
-};
-
-const app = initializeApp(firebaseConfig);
-const storage = getStorage(app);
-
-window.uploadImage = async function () {
-  const file = document.getElementById("imageFile").files[0];
-  const name = document.getElementById("imageName").value;
-
-  if (!file || !name) {
-    alert("اكتب الاسم واختر صورة");
-    return;
-  }
-
-  const storageRef = ref(storage, "images/" + name);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-
-  document.getElementById("uploadResult").innerHTML =
-    "✅ تم الحفظ<br><a href='" + url + "' target='_blank'>عرض الصورة</a>";
-};
-</script>
 
 <script>
-function toggleMenu() {
-  const d = document.getElementById("dropdown");
-  d.style.display = d.style.display === "block" ? "none" : "block";
+function clearForm(){
+  document.querySelectorAll("input, textarea").forEach(el=>{
+    if(el.type !== "file") el.value="";
+  });
 }
 
-function showSection(id) {
-  document.querySelectorAll(".section").forEach(s => s.style.display = "none");
-  document.getElementById("dropdown").style.display = "none";
-  document.getElementById(id).style.display = "block";
+function saveItem(){
+  alert("الواجهة جاهزة ✅\nالخطوة القادمة: ربط Firebase بالكامل");
 }
 </script>
 

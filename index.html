@@ -10,7 +10,6 @@ body{
   background:#f5f6f7;
   padding:20px;
 }
-h2{text-align:center}
 .container{
   display:grid;
   grid-template-columns:1fr 1fr;
@@ -32,31 +31,38 @@ button{cursor:pointer}
   justify-content:space-between;
   align-items:center;
   border-bottom:1px solid #ddd;
-  padding:8px 0;
+  padding:10px 0;
 }
 .item img{
   width:60px;
   height:60px;
   object-fit:cover;
-  cursor:pointer;
   border-radius:4px;
+}
+.actions{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.actions button{
+  font-size:12px;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📦 مستودع البيت</h2>
+<h2 style="text-align:center">📦 مستودع البيت</h2>
 
 <div class="container">
 
 <!-- النموذج -->
 <div class="card">
-<h3>إضافة / تعديل</h3>
+<h3>إضافة عنصر جديد</h3>
 
 <input id="name" placeholder="اسم الغرض *">
 
-<label>رقم الرف *</label>
+<label>رقم الرف</label>
 <select id="shelf"></select>
 
 <label>المكان</label>
@@ -79,8 +85,7 @@ button{cursor:pointer}
 <textarea id="notes" placeholder="ملاحظات"></textarea>
 <input type="file" id="image">
 
-<button id="saveBtn">💾 حفظ</button>
-<button onclick="clearForm()">🧹 مسح</button>
+<button id="addBtn">➕ إضافة جديدة</button>
 <p id="msg"></p>
 </div>
 
@@ -118,59 +123,44 @@ const imageInput = document.getElementById("image");
 const list = document.getElementById("list");
 const msg = document.getElementById("msg");
 
-let editId = null;
 let cache = [];
+let editingId = null;
 
-/* إنشاء أرقام الرفوف 1–100 */
+/* إنشاء الرفوف */
 for(let i=1;i<=100;i++){
-  const opt=document.createElement("option");
-  opt.value=i;
-  opt.textContent="رف "+i;
-  shelfSelect.appendChild(opt);
+  const o=document.createElement("option");
+  o.value=i;
+  o.textContent="رف "+i;
+  shelfSelect.appendChild(o);
 }
 
-document.getElementById("saveBtn").onclick = async ()=>{
+/* إضافة عنصر جديد */
+document.getElementById("addBtn").onclick = async ()=>{
   if(!nameInput.value || !shelfSelect.value){
     msg.innerText="❌ الاسم ورقم الرف مطلوبين";
     return;
   }
 
   let imageUrl="";
-
   if(imageInput.files[0]){
-    const imgRef=ref(storage,"images/"+Date.now());
-    await uploadBytes(imgRef,imageInput.files[0]);
-    imageUrl=await getDownloadURL(imgRef);
+    const r=ref(storage,"images/"+Date.now());
+    await uploadBytes(r,imageInput.files[0]);
+    imageUrl=await getDownloadURL(r);
   }
 
-  const data={
+  await addDoc(collection(db,"items"),{
     name:nameInput.value,
     shelf:shelfSelect.value,
     place:placeSelect.value,
     notes:notesInput.value,
     image:imageUrl
-  };
-
-  if(editId){
-    await updateDoc(doc(db,"items",editId), imageUrl?data:{...data,image:cache.find(x=>x.id===editId).image});
-    editId=null;
-  }else{
-    await addDoc(collection(db,"items"),data);
-  }
+  });
 
   clearForm();
   loadData();
 };
 
-function clearForm(){
-  nameInput.value="";
-  shelfSelect.value="";
-  placeSelect.value="";
-  notesInput.value="";
-  imageInput.value="";
-  msg.innerText="";
-}
-
+/* تحميل العناصر */
 async function loadData(){
   list.innerHTML="";
   cache=[];
@@ -187,13 +177,21 @@ async function loadData(){
         <b>${x.name}</b><br>
         رف ${x.shelf} - ${x.place||""}
       </div>
-      ${x.image?`<img src="${x.image}" onclick="openItem('${x.id}')">`:""}
+
+      <div style="display:flex;gap:10px;align-items:center">
+        ${x.image?`<img src="${x.image}">`:""}
+        <div class="actions">
+          <button onclick="editItem('${x.id}')">✏️ تعديل</button>
+          <button onclick="saveItem('${x.id}')">💾 حفظ</button>
+        </div>
+      </div>
     `;
     list.appendChild(div);
   });
 }
 
-window.openItem=function(id){
+/* تعديل */
+window.editItem=function(id){
   const x=cache.find(i=>i.id===id);
   if(!x)return;
 
@@ -201,10 +199,39 @@ window.openItem=function(id){
   shelfSelect.value=x.shelf;
   placeSelect.value=x.place;
   notesInput.value=x.notes;
-  editId=id;
+  editingId=id;
 
   window.scrollTo({top:0,behavior:"smooth"});
 };
+
+/* حفظ التعديل */
+window.saveItem=async function(id){
+  const x=cache.find(i=>i.id===id);
+  if(!x)return;
+
+  const data={
+    name:nameInput.value,
+    shelf:shelfSelect.value,
+    place:placeSelect.value,
+    notes:notesInput.value,
+    image:x.image
+  };
+
+  await updateDoc(doc(db,"items",id),data);
+  editingId=null;
+  clearForm();
+  loadData();
+};
+
+/* مسح النموذج */
+function clearForm(){
+  nameInput.value="";
+  shelfSelect.value="";
+  placeSelect.value="";
+  notesInput.value="";
+  imageInput.value="";
+  msg.innerText="";
+}
 
 loadData();
 </script>

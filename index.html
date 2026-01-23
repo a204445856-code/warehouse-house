@@ -152,15 +152,23 @@ document.getElementById("saveBtn").onclick = async ()=>{
   if(!nameInput.value || !shelfSelect.value){
     msg.innerText="❌ الاسم ورقم الرف مطلوبين";
     return;
-  }
+  }let imageUrl = "";
 
-  let imageUrl="";
-
-  if(imageInput.files[0]){
-    const imgRef=ref(storage,"images/"+Date.now());
-    await uploadBytes(imgRef,imageInput.files[0]);
-    imageUrl=await getDownloadURL(imgRef);
+if (imageInput.files && imageInput.files[0]) {
+  try {
+    const file = imageInput.files[0];
+    const imgRef = ref(
+      storage,
+      "images/" + Date.now() + "_" + file.name
+    );
+    await uploadBytes(imgRef, file);
+    imageUrl = await getDownloadURL(imgRef);
+  } catch (err) {
+    console.error("فشل رفع الصورة:", err);
+    imageUrl = ""; // نكمل الحفظ بدون صورة
   }
+}
+
 
   const data={
     name:nameInput.value,

@@ -1,117 +1,3 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-<meta charset="UTF-8">
-<title>مستودع البيت</title>
-
-<style>
-body{
-  font-family: Arial;
-  background:#f5f6f7;
-  padding:20px;
-}
-h2{text-align:center}
-.container{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-}
-.card{
-  background:#fff;
-  padding:15px;
-  border-radius:8px;
-}
-input, textarea, select, button{
-  width:100%;
-  padding:8px;
-  margin:6px 0;
-}
-button{cursor:pointer}
-.item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid #ddd;
-  padding:8px 0;
-}
-.item-right{
-  display:flex;
-  align-items:center;
-  gap:6px;
-}
-.item img{
-  width:60px;
-  height:60px;
-  object-fit:cover;
-  border-radius:4px;
-  cursor:pointer;
-}
-.btn-edit{
-  background:#f59e0b;
-  color:#fff;
-  border:none;
-  padding:6px 8px;
-  border-radius:4px;
-}
-.btn-delete{
-  background:#ef4444;
-  color:#fff;
-  border:none;
-  padding:6px 8px;
-  border-radius:4px;
-}
-</style>
-</head>
-
-<body>
-
-<h2>📦 مستودع البيت</h2>
-
-<div class="container">
-
-<!-- النموذج -->
-<div class="card">
-<h3>إضافة / تعديل</h3>
-
-<input id="name" placeholder="اسم الغرض *">
-
-<label>رقم الرف *</label>
-<select id="shelf"></select>
-
-<label>المكان</label>
-<select id="place">
-  <option value="">-- اختر المكان --</option>
-  <option>البدروم</option>
-  <option>رف أيمن</option>
-  <option>رف أيسر</option>
-  <option>رف أمام</option>
-  <option>المطبخ</option>
-  <option>غرفة البنات</option>
-  <option>غرفة الأولاد</option>
-  <option>الصالة</option>
-  <option>تحت المغسلة</option>
-  <option>غرفتي</option>
-  <option>استقبال</option>
-  <option>استقبال البيت</option>
-</select>
-
-<textarea id="notes" placeholder="ملاحظات"></textarea>
-<input type="file" id="image">
-
-<button type="button" id="saveBtn">💾 حفظ</button>
-<button type="button" onclick="clearForm()">🧹 مسح</button>
-
-<p id="msg"></p>
-</div>
-
-<!-- القائمة -->
-<div class="card">
-<h3>المحتويات</h3>
-<div id="list"></div>
-</div>
-
-</div>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
@@ -159,18 +45,10 @@ document.getElementById("saveBtn").onclick = async () => {
     let imageUrl = "";
 
     if (imageInput.files && imageInput.files[0]) {
-      try {
-        const file = imageInput.files[0];
-        const imgRef = ref(
-          storage,
-          "images/" + Date.now() + "_" + file.name
-        );
-        await uploadBytes(imgRef, file);
-        imageUrl = await getDownloadURL(imgRef);
-      } catch (err) {
-        console.error("فشل رفع الصورة:", err);
-        imageUrl = "";
-      }
+      const file = imageInput.files[0];
+      const imgRef = ref(storage, "images/" + Date.now() + "_" + file.name);
+      await uploadBytes(imgRef, file);
+      imageUrl = await getDownloadURL(imgRef);
     }
 
     const data = {
@@ -196,50 +74,10 @@ document.getElementById("saveBtn").onclick = async () => {
     clearForm();
     loadData();
 
-  } catch (error) {
-    console.error("خطأ عام في الحفظ:", error);
-    msg.innerText = "❌ حدث خطأ أثناء الحفظ";
-  }
-};
-  if(!nameInput.value || !shelfSelect.value){
-    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
-    return;
-  }let imageUrl = "";
-
-if (imageInput.files && imageInput.files[0]) {
-  try {
-    const file = imageInput.files[0];
-    const imgRef = ref(
-      storage,
-      "images/" + Date.now() + "_" + file.name
-    );
-    await uploadBytes(imgRef, file);
-    imageUrl = await getDownloadURL(imgRef);
   } catch (err) {
-    console.error("فشل رفع الصورة:", err);
-    imageUrl = ""; // نكمل الحفظ بدون صورة
+    console.error(err);
+    msg.innerText = "❌ خطأ أثناء الحفظ";
   }
-}
-
-
-  const data={
-    name:nameInput.value,
-    shelf:shelfSelect.value,
-    place:placeSelect.value,
-    notes:notesInput.value,
-    image:imageUrl
-  };
-
-  if(editId){
-    const old=cache.find(x=>x.id===editId);
-    await updateDoc(doc(db,"items",editId), imageUrl?data:{...data,image:old.image});
-    editId=null;
-  }else{
-    await addDoc(collection(db,"items"),data);
-  }
-
-  clearForm();
-  loadData();
 };
 
 function clearForm(){
@@ -286,7 +124,6 @@ window.editItem=function(id){
   placeSelect.value=x.place;
   notesInput.value=x.notes;
   editId=id;
-
   window.scrollTo({top:0,behavior:"smooth"});
 };
 
@@ -299,6 +136,3 @@ window.deleteItem=async function(id){
 
 loadData();
 </script>
-
-</body>
-</html>

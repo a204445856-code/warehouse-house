@@ -149,7 +149,58 @@ for(let i=1;i<=100;i++){
   shelfSelect.appendChild(opt);
 }
 
-document.getElementById("saveBtn").onclick = async ()=>{
+document.getElementById("saveBtn").onclick = async () => {
+  try {
+    if (!nameInput.value || !shelfSelect.value) {
+      msg.innerText = "❌ الاسم ورقم الرف مطلوبين";
+      return;
+    }
+
+    let imageUrl = "";
+
+    if (imageInput.files && imageInput.files[0]) {
+      try {
+        const file = imageInput.files[0];
+        const imgRef = ref(
+          storage,
+          "images/" + Date.now() + "_" + file.name
+        );
+        await uploadBytes(imgRef, file);
+        imageUrl = await getDownloadURL(imgRef);
+      } catch (err) {
+        console.error("فشل رفع الصورة:", err);
+        imageUrl = "";
+      }
+    }
+
+    const data = {
+      name: nameInput.value,
+      shelf: shelfSelect.value,
+      place: placeSelect.value,
+      notes: notesInput.value,
+      image: imageUrl
+    };
+
+    if (editId) {
+      const old = cache.find(x => x.id === editId);
+      await updateDoc(
+        doc(db, "items", editId),
+        imageUrl ? data : { ...data, image: old?.image || "" }
+      );
+      editId = null;
+    } else {
+      await addDoc(collection(db, "items"), data);
+    }
+
+    msg.innerText = "✅ تم الحفظ بنجاح";
+    clearForm();
+    loadData();
+
+  } catch (error) {
+    console.error("خطأ عام في الحفظ:", error);
+    msg.innerText = "❌ حدث خطأ أثناء الحفظ";
+  }
+};
   if(!nameInput.value || !shelfSelect.value){
     msg.innerText="❌ الاسم ورقم الرف مطلوبين";
     return;

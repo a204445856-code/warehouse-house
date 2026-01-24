@@ -116,8 +116,8 @@ button{cursor:pointer}
 
 <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-<!-- شرط نوع الصور -->
-<input type="file" id="image" accept="image/*">
+<!-- مهم للجوال -->
+<input type="file" id="image" accept="image/*" capture="environment">
 
 <button type="button" id="saveBtn">💾 حفظ</button>
 <button type="button" id="clearBtn">🧹 مسح</button>
@@ -169,12 +169,34 @@ const msg=document.getElementById("msg");
 let editId=null;
 let cache=[];
 
-/* الرفوف 1-100 */
+/* الرفوف */
 for(let i=1;i<=100;i++){
   const opt=document.createElement("option");
   opt.value=i;
   opt.textContent="رف "+i;
   shelfSelect.appendChild(opt);
+}
+
+/* ضغط وتحويل صورة الجوال */
+async function compressImage(file){
+  return new Promise(resolve=>{
+    const img=new Image();
+    const reader=new FileReader();
+
+    reader.onload=e=>img.src=e.target.result;
+    img.onload=()=>{
+      const canvas=document.createElement("canvas");
+      const max=800;
+      const scale=Math.min(max/img.width,1);
+      canvas.width=img.width*scale;
+      canvas.height=img.height*scale;
+      canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+      canvas.toBlob(b=>{
+        resolve(new File([b],"photo.jpg",{type:"image/jpeg"}));
+      },"image/jpeg",0.7);
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 document.getElementById("saveBtn").onclick=async()=>{
@@ -185,27 +207,13 @@ document.getElementById("saveBtn").onclick=async()=>{
     }
 
     let imageUrl="";
-    const file=imageInput.files[0];
+    let file=imageInput.files[0];
 
-    /* ===== شرط الحجم والنوع ===== */
     if(file){
-      if(!file.type.startsWith("image/")){
-        msg.innerText="❌ الملف ليس صورة";
-        return;
-      }
-      if(file.size>1024*1024){
-        msg.innerText="❌ حجم الصورة أكبر من 1MB";
-        return;
-      }
-
-      try{
-        const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
-        await uploadBytes(imgRef,file);
-        imageUrl=await getDownloadURL(imgRef);
-      }catch(e){
-        console.error(e);
-        msg.innerText="⚠️ لم يتم رفع الصورة، تم الحفظ بدونها";
-      }
+      file=await compressImage(file);
+      const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
+      await uploadBytes(imgRef,file);
+      imageUrl=await getDownloadURL(imgRef);
     }
 
     const data={
@@ -228,9 +236,9 @@ document.getElementById("saveBtn").onclick=async()=>{
     loadData();
     msg.innerText="✅ تم الحفظ";
 
-  }catch(err){
-    console.error(err);
-    msg.innerText="❌ خطأ غير متوقع";
+  }catch(e){
+    console.error(e);
+    msg.innerText="❌ خطأ أثناء الحفظ";
   }
 };
 

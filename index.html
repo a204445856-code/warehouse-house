@@ -27,10 +27,7 @@ padding:8px;
 margin:6px 0;
 }
 
-#list{
-max-height:420px;
-overflow-y:auto;
-}
+#list{max-height:420px;overflow-y:auto}
 
 .item{
 display:flex;
@@ -40,11 +37,7 @@ border-bottom:1px solid #ddd;
 padding:8px 0;
 }
 
-.item-right{
-display:flex;
-align-items:center;
-gap:6px;
-}
+.item-right{display:flex;align-items:center;gap:6px}
 
 .item img{
 width:60px;
@@ -169,7 +162,6 @@ body{padding:12px}
 </select>
 
 <textarea id="notes" placeholder="ملاحظات"></textarea>
-
 <input type="file" id="image" accept="image/*">
 
 <button type="button" id="saveBtn">💾 حفظ</button>
@@ -193,10 +185,13 @@ body{padding:12px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+getFirestore, collection, addDoc, getDocs, doc, 
+updateDoc, deleteDoc, getDoc, setDoc 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-window.addEventListener("DOMContentLoaded",()=>{
+window.addEventListener("DOMContentLoaded",async()=>{
 
 const firebaseConfig = {
   apiKey: "ضع_بياناتك",
@@ -210,6 +205,27 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+let PASSWORD="";
+
+/* تحميل كلمة المرور الموحدة */
+async function loadPassword(){
+const snap = await getDoc(doc(db,"settings","config"));
+if(!snap.exists()){
+await setDoc(doc(db,"settings","config"),{password:"1234"});
+PASSWORD="1234";
+}else{
+PASSWORD=snap.data().password;
+}
+window.PASSWORD = PASSWORD;
+}
+await loadPassword();
+
+/* تحديث كلمة المرور */
+window.updatePasswordInDB = async function(newPass){
+await setDoc(doc(db,"settings","config"),{password:newPass});
+window.PASSWORD=newPass;
+};
 
 const nameInput=document.getElementById("name");
 const shelfSelect=document.getElementById("shelf");
@@ -309,28 +325,17 @@ ${x.image?`<img src="${x.image}" onclick="editItem('${x.id}')">`:""}
 </div>`;
 list.appendChild(div);
 
-/* عرض في الاستديو */
+/* استديو */
 if(x.image){
 const img=document.createElement("img");
-img.src = x.image;
-img.addEventListener("click", function(){
-    const item = cache.find(i => i.id === x.id);
-    if(!item) return;
-
-    nameInput.value = item.name;
-    shelfSelect.value = item.shelf;
-    placeSelect.value = item.place;
-    notesInput.value = item.notes;
-    editId = item.id;
-    msg.innerText = "✏️ وضع التعديل";
-});
+img.src=x.image;
+img.onclick=()=>editItem(x.id);
 gallery.appendChild(img);
 }
-
 });
 }
 
-/* تعديل */
+/* تعديل + الرجوع للأعلى */
 window.editItem=id=>{
 const x=cache.find(i=>i.id===id);
 if(!x)return;
@@ -341,6 +346,8 @@ placeSelect.value=x.place;
 notesInput.value=x.notes;
 editId=id;
 msg.innerText="✏️ وضع التعديل";
+
+window.scrollTo({top:0,behavior:"smooth"});
 };
 
 /* حذف */
@@ -356,10 +363,8 @@ loadData();
 </script>
 
 <script>
-let PASSWORD = localStorage.getItem("savedPass") || "1234";
-
 function unlock(){
-if(document.getElementById("lockPass").value===PASSWORD){
+if(document.getElementById("lockPass").value===window.PASSWORD){
 document.getElementById("lockScreen").style.display="none";
 }else{
 document.getElementById("lockMsg").innerText="كلمة المرور غير صحيحة";
@@ -374,23 +379,17 @@ function closeChangePass(){
 document.getElementById("changePassBox").style.display="none";
 }
 
-function changePassword(){
+async function changePassword(){
 const oldP=document.getElementById("oldPass").value;
 const newP=document.getElementById("newPass").value;
 
-if(oldP!==PASSWORD){
+if(oldP!==window.PASSWORD){
 document.getElementById("changeMsg").innerText="كلمة المرور غير صحيحة";
 return;
 }
 
-if(newP.length<3){
-document.getElementById("changeMsg").innerText="كلمة المرور قصيرة";
-return;
-}
-
-PASSWORD=newP;
-localStorage.setItem("savedPass",newP);
-document.getElementById("changeMsg").innerText="تم التغيير";
+await window.updatePasswordInDB(newP);
+document.getElementById("changeMsg").innerText="تم التغيير لجميع الأجهزة";
 }
 </script>
 

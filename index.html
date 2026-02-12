@@ -6,137 +6,177 @@
 <title>مستودع البيت</title>
 
 <style>
-body{font-family:Arial;background:#f5f6f7;padding:20px}
+body{
+  font-family: Arial;
+  background:#f5f6f7;
+  padding:20px;
+}
 h2{text-align:center}
 
 .container{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
 }
 
 .card{
-background:#fff;
-padding:15px;
-border-radius:8px;
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
 }
 
-input,textarea,select,button{
-width:100%;
-padding:8px;
-margin:6px 0;
+input, textarea, select, button{
+  width:100%;
+  padding:8px;
+  margin:6px 0;
+}
+
+button{cursor:pointer}
+
+#list{
+  max-height:420px;
+  overflow-y:auto;
 }
 
 .item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:1px solid #ddd;
-padding:8px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #ddd;
+  padding:8px 0;
 }
 
 .item-right{
-display:flex;
-align-items:center;
-gap:6px;
+  display:flex;
+  align-items:center;
+  gap:6px;
 }
 
 .item img{
-width:60px;
-height:60px;
-object-fit:cover;
-border-radius:4px;
+  width:60px;
+  height:60px;
+  object-fit:cover;
+  border-radius:4px;
 }
 
-.btn-edit{background:#f59e0b;color:#fff;border:none;padding:6px 8px;border-radius:4px}
-.btn-delete{background:#ef4444;color:#fff;border:none;padding:6px 8px;border-radius:4px}
+.btn-edit{
+  background:#f59e0b;
+  color:#fff;
+  border:none;
+  padding:6px 8px;
+  border-radius:4px;
+}
+
+.btn-delete{
+  background:#ef4444;
+  color:#fff;
+  border:none;
+  padding:6px 8px;
+  border-radius:4px;
+}
 
 #gallery{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-gap:10px;
-margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;
+  margin-top:10px;
 }
 
 #gallery img{
-width:100%;
-height:120px;
-object-fit:cover;
-border-radius:6px;
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 /* شاشة القفل */
 #lockScreen{
-position:fixed;
-inset:0;
-background:#111827;
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:9999;
+  position:fixed;
+  inset:0;
+  background:#111827;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
 }
 
 .lockBox{
-background:#fff;
-padding:25px;
-border-radius:10px;
-width:260px;
-text-align:center;
+  background:#fff;
+  padding:25px;
+  border-radius:10px;
+  width:260px;
+  text-align:center;
 }
 
-.lockIcon{
-font-size:22px;
-cursor:pointer;
-margin-top:8px;
+.lockBox button{
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:6px;
 }
 
+#lockMsg{color:red;font-size:14px}
+
+/* تغيير كلمة المرور */
 #changePassBox{
-display:none;
-position:fixed;
-inset:0;
-background:#000000aa;
-z-index:10000;
-justify-content:center;
-align-items:center;
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#000000aa;
+  z-index:10000;
+  justify-content:center;
+  align-items:center;
 }
 
 #changePassBox .inner{
-background:#fff;
-padding:20px;
-border-radius:10px;
-width:260px;
-text-align:center;
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  width:260px;
+  text-align:center;
 }
 
+/* شكل الجوال يرجع عمود واحد */
 @media(max-width:768px){
-.container{grid-template-columns:1fr}
-body{padding:12px}
-.item img{width:70px;height:70px}
+  .container{
+    grid-template-columns:1fr;
+  }
+  body{padding:12px}
+  .item img{
+    width:70px;
+    height:70px;
+  }
 }
 </style>
 </head>
 
 <body>
 
+<!-- القفل -->
 <div id="lockScreen">
-<div class="lockBox">
-<h3>🔐 مستودع البيت</h3>
-<input type="password" id="lockPass" placeholder="ادخل كلمة المرور">
-<button onclick="unlock()">دخول</button>
-<div class="lockIcon" onclick="showChangePass()">🔑</div>
-<p id="lockMsg"></p>
-</div>
+  <div class="lockBox">
+    <h3>🔐 مستودع البيت</h3>
+    <input type="password" id="lockPass" placeholder="ادخل كلمة المرور">
+    <button onclick="unlock()">دخول</button>
+    <button onclick="showChangePass()" style="background:#6b7280;margin-top:6px;">
+      تغيير كلمة المرور
+    </button>
+    <p id="lockMsg"></p>
+  </div>
 </div>
 
+<!-- نافذة تغيير كلمة المرور -->
 <div id="changePassBox">
-<div class="inner">
-<h4>تغيير كلمة المرور</h4>
-<input type="password" id="oldPass" placeholder="الحالية">
-<input type="password" id="newPass" placeholder="الجديدة">
-<button onclick="changePassword()">حفظ</button>
-<button onclick="closeChangePass()" style="background:#ef4444;margin-top:6px;">إلغاء</button>
-<p id="changeMsg"></p>
-</div>
+  <div class="inner">
+    <h4>تغيير كلمة المرور</h4>
+    <input type="password" id="oldPass" placeholder="الحالية">
+    <input type="password" id="newPass" placeholder="الجديدة">
+    <button onclick="changePassword()">حفظ</button>
+    <button onclick="closeChangePass()" style="background:#ef4444;margin-top:6px;">إلغاء</button>
+    <p id="changeMsg"></p>
+  </div>
 </div>
 
 <h2>📦 مستودع البيت</h2>
@@ -147,6 +187,7 @@ body{padding:12px}
 <h3>إضافة / تعديل</h3>
 
 <input id="name" placeholder="اسم الغرض *">
+
 <label>رقم الرف *</label>
 <select id="shelf"></select>
 
@@ -154,17 +195,26 @@ body{padding:12px}
 <select id="place">
 <option value="">-- اختر المكان --</option>
 <option>البدروم</option>
+<option>رف أيمن</option>
+<option>رف أيسر</option>
+<option>رف أمام</option>
 <option>المطبخ</option>
-<option>الصالة</option>
 <option>غرفة البنات</option>
 <option>غرفة الأولاد</option>
+<option>الصالة</option>
 <option>تحت المغسلة</option>
+<option>غرفتي</option>
+<option>استقبال</option>
+<option>استقبال البيت</option>
 </select>
 
 <textarea id="notes" placeholder="ملاحظات"></textarea>
-<input type="file" id="image" accept="image/*">
+
+<input type="file" id="image" accept="image/*" capture="environment">
 
 <button type="button" id="saveBtn">💾 حفظ</button>
+<button type="button" id="clearBtn">🧹 مسح</button>
+
 <p id="msg"></p>
 </div>
 
@@ -183,65 +233,188 @@ body{padding:12px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
+window.addEventListener("DOMContentLoaded",()=>{
+
 const firebaseConfig = {
-  apiKey: "ضع_بياناتك_الحقيقية",
-  authDomain: "ضع_بياناتك_الحقيقية",
+  apiKey: "ضع_بياناتك",
+  authDomain: "ضع_بياناتك",
   projectId: "warehouse-house",
-  storageBucket: "warehouse-house.appspot.com",
+  storageBucket: "warehouse-house.firebasestorage.app",
   messagingSenderId: "791378856906",
-  appId: "ضع_بياناتك_الحقيقية"
+  appId: "ضع_بياناتك"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-let PASSWORD = "";
+const nameInput=document.getElementById("name");
+const shelfSelect=document.getElementById("shelf");
+const placeSelect=document.getElementById("place");
+const notesInput=document.getElementById("notes");
+const imageInput=document.getElementById("image");
+const list=document.getElementById("list");
+const gallery=document.getElementById("gallery");
+const msg=document.getElementById("msg");
+const searchBox=document.getElementById("searchBox");
 
-async function loadPassword(){
-const snap = await getDoc(doc(db,"settings","config"));
-if(!snap.exists()){
-await setDoc(doc(db,"settings","config"),{password:"1234"});
-PASSWORD="1234";
-}else{
-PASSWORD=snap.data().password;
-}
-}
+let editId=null;
+let cache=[];
 
-window.unlock = async function(){
-if(document.getElementById("lockPass").value===PASSWORD){
-document.getElementById("lockScreen").style.display="none";
-}else{
-document.getElementById("lockMsg").innerText="كلمة المرور غير صحيحة";
-}
-}
-
-window.showChangePass = function(){
-document.getElementById("changePassBox").style.display="flex";
+for(let i=1;i<=100;i++){
+  const opt=document.createElement("option");
+  opt.value=i;
+  opt.textContent="رف "+i;
+  shelfSelect.appendChild(opt);
 }
 
-window.closeChangePass = function(){
-document.getElementById("changePassBox").style.display="none";
+searchBox.addEventListener("input",()=>{
+  const val=searchBox.value.toLowerCase();
+  document.querySelectorAll(".item").forEach(el=>{
+    el.style.display=el.innerText.toLowerCase().includes(val)?"flex":"none";
+  });
+});
+
+document.getElementById("saveBtn").onclick=async()=>{
+  if(!nameInput.value||!shelfSelect.value){
+    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
+    return;
+  }
+
+  let imageUrl="";
+  let file=imageInput.files[0];
+
+  if(file){
+    const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
+    await uploadBytes(imgRef,file);
+    imageUrl=await getDownloadURL(imgRef);
+  }
+
+  const data={
+    name:nameInput.value,
+    shelf:shelfSelect.value,
+    place:placeSelect.value,
+    notes:notesInput.value,
+    image:imageUrl
+  };
+
+  if(editId){
+    await updateDoc(doc(db,"items",editId),data);
+    editId=null;
+  }else{
+    await addDoc(collection(db,"items"),data);
+  }
+
+  loadData();
+  msg.innerText="✅ تم الحفظ";
+};
+
+document.getElementById("clearBtn").onclick=()=>{
+  nameInput.value="";
+  shelfSelect.value="";
+  placeSelect.value="";
+  notesInput.value="";
+  imageInput.value="";
+};
+
+async function loadData(){
+  list.innerHTML="";
+  gallery.innerHTML="";
+  cache=[];
+
+  const snap=await getDocs(collection(db,"items"));
+  snap.forEach(d=>{
+    const x={id:d.id,...d.data()};
+    cache.push(x);
+
+    const div=document.createElement("div");
+    div.className="item";
+    div.innerHTML=`
+      <div>
+        <b>${x.name}</b><br>
+        رف ${x.shelf} - ${x.place||""}
+      </div>
+      <div class="item-right">
+        ${x.image?`<img src="${x.image}" onclick="editItem('${x.id}')">`:""}
+        <button class="btn-edit" onclick="editItem('${x.id}')">✏️</button>
+        <button class="btn-delete" onclick="deleteItem('${x.id}')">🗑️</button>
+      </div>`;
+    list.appendChild(div);
+
+    if(x.image){
+      const img=document.createElement("img");
+      img.src=x.image;
+      gallery.appendChild(img);
+    }
+  });
 }
 
-window.changePassword = async function(){
-const oldP=document.getElementById("oldPass").value;
-const newP=document.getElementById("newPass").value;
+window.editItem=id=>{
+  const x=cache.find(i=>i.id===id);
+  if(!x)return;
+  nameInput.value=x.name;
+  shelfSelect.value=x.shelf;
+  placeSelect.value=x.place;
+  notesInput.value=x.notes;
+  editId=id;
+};
 
-if(oldP!==PASSWORD){
-document.getElementById("changeMsg").innerText="كلمة المرور غير صحيحة";
-return;
+window.deleteItem=async id=>{
+  if(confirm("حذف العنصر؟")){
+    await deleteDoc(doc(db,"items",id));
+    loadData();
+  }
+};
+
+loadData();
+});
+</script>
+
+<script>
+let PASSWORD = localStorage.getItem("savedPass") || "1234";
+
+function unlock(){
+  if(document.getElementById("lockPass").value===PASSWORD){
+    localStorage.setItem("ok","1");
+    document.getElementById("lockScreen").style.display="none";
+  }else{
+    document.getElementById("lockMsg").innerText="كلمة المرور غير صحيحة";
+  }
 }
 
-await setDoc(doc(db,"settings","config"),{password:newP});
-PASSWORD=newP;
-document.getElementById("changeMsg").innerText="تم التغيير لجميع الأجهزة";
+if(localStorage.getItem("ok")==="1"){
+  document.getElementById("lockScreen").style.display="none";
 }
 
-await loadPassword();
+function showChangePass(){
+  document.getElementById("changePassBox").style.display="flex";
+}
+
+function closeChangePass(){
+  document.getElementById("changePassBox").style.display="none";
+}
+
+function changePassword(){
+  const oldP=document.getElementById("oldPass").value;
+  const newP=document.getElementById("newPass").value;
+
+  if(oldP!==PASSWORD){
+    document.getElementById("changeMsg").innerText="كلمة المرور غير صحيحة";
+    return;
+  }
+
+  if(newP.length<3){
+    document.getElementById("changeMsg").innerText="كلمة المرور قصيرة";
+    return;
+  }
+
+  PASSWORD=newP;
+  localStorage.setItem("savedPass",newP);
+  document.getElementById("changeMsg").innerText="تم التغيير";
+}
 </script>
 
 </body>

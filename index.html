@@ -12,21 +12,25 @@ body{
   padding:20px;
 }
 h2{text-align:center}
+
 .container{
   display:grid;
   grid-template-columns:1fr 1fr;
   gap:20px;
 }
+
 .card{
   background:#fff;
   padding:15px;
   border-radius:8px;
 }
+
 input, textarea, select, button{
   width:100%;
   padding:8px;
   margin:6px 0;
 }
+
 button{cursor:pointer}
 
 #list{
@@ -41,11 +45,13 @@ button{cursor:pointer}
   border-bottom:1px solid #ddd;
   padding:8px 0;
 }
+
 .item-right{
   display:flex;
   align-items:center;
   gap:6px;
 }
+
 .item img{
   width:60px;
   height:60px;
@@ -60,6 +66,7 @@ button{cursor:pointer}
   padding:6px 8px;
   border-radius:4px;
 }
+
 .btn-delete{
   background:#ef4444;
   color:#fff;
@@ -74,6 +81,7 @@ button{cursor:pointer}
   gap:10px;
   margin-top:10px;
 }
+
 #gallery img{
   width:100%;
   height:120px;
@@ -92,6 +100,7 @@ button{cursor:pointer}
   align-items:center;
   z-index:9999;
 }
+
 .lockBox{
   background:#fff;
   padding:25px;
@@ -99,9 +108,7 @@ button{cursor:pointer}
   width:260px;
   text-align:center;
 }
-.lockBox input{
-  padding:10px;
-}
+
 .lockBox button{
   background:#2563eb;
   color:#fff;
@@ -109,52 +116,66 @@ button{cursor:pointer}
   padding:10px;
   border-radius:6px;
 }
-#lockMsg{
-  color:red;
-  font-size:14px;
+
+#lockMsg{color:red;font-size:14px}
+
+/* تغيير كلمة المرور */
+#changePassBox{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:#000000aa;
+  z-index:10000;
+  justify-content:center;
+  align-items:center;
 }
 
-/* تكبير في الجوال */
+#changePassBox .inner{
+  background:#fff;
+  padding:20px;
+  border-radius:10px;
+  width:260px;
+  text-align:center;
+}
+
+/* شكل الجوال يرجع عمود واحد */
 @media(max-width:768px){
-
-  body{
-    padding:10px;
+  .container{
+    grid-template-columns:1fr;
   }
-
-  button{
-    font-size:18px;
-    padding:12px;
-  }
-
-  .btn-edit,
-  .btn-delete{
-    font-size:20px;
-    padding:10px;
-  }
-
+  body{padding:12px}
   .item img{
-    width:90px;
-    height:90px;
+    width:70px;
+    height:70px;
   }
-
-  input,select,textarea{
-    font-size:16px;
-    padding:10px;
-  }
-
 }
 </style>
 </head>
 
 <body>
 
-<!-- شاشة القفل -->
+<!-- القفل -->
 <div id="lockScreen">
   <div class="lockBox">
     <h3>🔐 مستودع البيت</h3>
     <input type="password" id="lockPass" placeholder="ادخل كلمة المرور">
     <button onclick="unlock()">دخول</button>
+    <button onclick="showChangePass()" style="background:#6b7280;margin-top:6px;">
+      تغيير كلمة المرور
+    </button>
     <p id="lockMsg"></p>
+  </div>
+</div>
+
+<!-- نافذة تغيير كلمة المرور -->
+<div id="changePassBox">
+  <div class="inner">
+    <h4>تغيير كلمة المرور</h4>
+    <input type="password" id="oldPass" placeholder="الحالية">
+    <input type="password" id="newPass" placeholder="الجديدة">
+    <button onclick="changePassword()">حفظ</button>
+    <button onclick="closeChangePass()" style="background:#ef4444;margin-top:6px;">إلغاء</button>
+    <p id="changeMsg"></p>
   </div>
 </div>
 
@@ -172,19 +193,19 @@ button{cursor:pointer}
 
 <label>المكان</label>
 <select id="place">
-  <option value="">-- اختر المكان --</option>
-  <option>البدروم</option>
-  <option>رف أيمن</option>
-  <option>رف أيسر</option>
-  <option>رف أمام</option>
-  <option>المطبخ</option>
-  <option>غرفة البنات</option>
-  <option>غرفة الأولاد</option>
-  <option>الصالة</option>
-  <option>تحت المغسلة</option>
-  <option>غرفتي</option>
-  <option>استقبال</option>
-  <option>استقبال البيت</option>
+<option value="">-- اختر المكان --</option>
+<option>البدروم</option>
+<option>رف أيمن</option>
+<option>رف أيسر</option>
+<option>رف أمام</option>
+<option>المطبخ</option>
+<option>غرفة البنات</option>
+<option>غرفة الأولاد</option>
+<option>الصالة</option>
+<option>تحت المغسلة</option>
+<option>غرفتي</option>
+<option>استقبال</option>
+<option>استقبال البيت</option>
 </select>
 
 <textarea id="notes" placeholder="ملاحظات"></textarea>
@@ -199,9 +220,7 @@ button{cursor:pointer}
 
 <div class="card">
 <h3>المحتويات</h3>
-
-<input type="text" id="searchBox" placeholder="🔎 بحث بالاسم أو رقم الرف">
-
+<input type="text" id="searchBox" placeholder="🔎 بحث">
 <div id="list"></div>
 </div>
 
@@ -220,7 +239,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 window.addEventListener("DOMContentLoaded",()=>{
 
 const firebaseConfig = {
-  apiKey: "ضع_مفتاحك_هنا",
+  apiKey: "ضع_بياناتك",
   authDomain: "ضع_بياناتك",
   projectId: "warehouse-house",
   storageBucket: "warehouse-house.firebasestorage.app",
@@ -255,82 +274,51 @@ for(let i=1;i<=100;i++){
 searchBox.addEventListener("input",()=>{
   const val=searchBox.value.toLowerCase();
   document.querySelectorAll(".item").forEach(el=>{
-    const text=el.innerText.toLowerCase();
-    el.style.display=text.includes(val)?"flex":"none";
+    el.style.display=el.innerText.toLowerCase().includes(val)?"flex":"none";
   });
 });
 
-async function compressImage(file){
-  return new Promise(resolve=>{
-    const img=new Image();
-    const reader=new FileReader();
-    reader.onload=e=>img.src=e.target.result;
-    img.onload=()=>{
-      const canvas=document.createElement("canvas");
-      const max=800;
-      const scale=Math.min(max/img.width,1);
-      canvas.width=img.width*scale;
-      canvas.height=img.height*scale;
-      canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
-      canvas.toBlob(b=>{
-        resolve(new File([b],"photo.jpg",{type:"image/jpeg"}));
-      },"image/jpeg",0.7);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 document.getElementById("saveBtn").onclick=async()=>{
-  try{
-    if(!nameInput.value||!shelfSelect.value){
-      msg.innerText="❌ الاسم ورقم الرف مطلوبين";
-      return;
-    }
-
-    let imageUrl="";
-    let file=imageInput.files[0];
-
-    if(file){
-      file=await compressImage(file);
-      const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
-      await uploadBytes(imgRef,file);
-      imageUrl=await getDownloadURL(imgRef);
-    }
-
-    const data={
-      name:nameInput.value,
-      shelf:shelfSelect.value,
-      place:placeSelect.value,
-      notes:notesInput.value,
-      image:imageUrl
-    };
-
-    if(editId){
-      const old=cache.find(x=>x.id===editId);
-      await updateDoc(doc(db,"items",editId),imageUrl?data:{...data,image:old.image});
-      editId=null;
-    }else{
-      await addDoc(collection(db,"items"),data);
-    }
-
-    clearForm();
-    loadData();
-    msg.innerText="✅ تم الحفظ";
-
-  }catch(e){
-    msg.innerText="❌ خطأ أثناء الحفظ";
+  if(!nameInput.value||!shelfSelect.value){
+    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
+    return;
   }
+
+  let imageUrl="";
+  let file=imageInput.files[0];
+
+  if(file){
+    const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
+    await uploadBytes(imgRef,file);
+    imageUrl=await getDownloadURL(imgRef);
+  }
+
+  const data={
+    name:nameInput.value,
+    shelf:shelfSelect.value,
+    place:placeSelect.value,
+    notes:notesInput.value,
+    image:imageUrl
+  };
+
+  if(editId){
+    await updateDoc(doc(db,"items",editId),data);
+    editId=null;
+  }else{
+    await addDoc(collection(db,"items"),data);
+  }
+
+  loadData();
+  msg.innerText="✅ تم الحفظ";
 };
 
-document.getElementById("clearBtn").onclick=clearForm;
-
-function clearForm(){
+document.getElementById("clearBtn").onclick=()=>{
   nameInput.value="";
   shelfSelect.value="";
   placeSelect.value="";
   notesInput.value="";
   imageInput.value="";
-}
+};
 
 async function loadData(){
   list.innerHTML="";
@@ -359,7 +347,6 @@ async function loadData(){
     if(x.image){
       const img=document.createElement("img");
       img.src=x.image;
-      img.onclick=()=>editItem(x.id);
       gallery.appendChild(img);
     }
   });
@@ -387,11 +374,10 @@ loadData();
 </script>
 
 <script>
-const PASSWORD="1234";
+let PASSWORD = localStorage.getItem("savedPass") || "1234";
 
 function unlock(){
-  const val=document.getElementById("lockPass").value;
-  if(val===PASSWORD){
+  if(document.getElementById("lockPass").value===PASSWORD){
     localStorage.setItem("ok","1");
     document.getElementById("lockScreen").style.display="none";
   }else{
@@ -401,6 +387,33 @@ function unlock(){
 
 if(localStorage.getItem("ok")==="1"){
   document.getElementById("lockScreen").style.display="none";
+}
+
+function showChangePass(){
+  document.getElementById("changePassBox").style.display="flex";
+}
+
+function closeChangePass(){
+  document.getElementById("changePassBox").style.display="none";
+}
+
+function changePassword(){
+  const oldP=document.getElementById("oldPass").value;
+  const newP=document.getElementById("newPass").value;
+
+  if(oldP!==PASSWORD){
+    document.getElementById("changeMsg").innerText="كلمة المرور غير صحيحة";
+    return;
+  }
+
+  if(newP.length<3){
+    document.getElementById("changeMsg").innerText="كلمة المرور قصيرة";
+    return;
+  }
+
+  PASSWORD=newP;
+  localStorage.setItem("savedPass",newP);
+  document.getElementById("changeMsg").innerText="تم التغيير";
 }
 </script>
 

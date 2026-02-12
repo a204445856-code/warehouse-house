@@ -109,12 +109,15 @@ button{cursor:pointer}
   text-align:center;
 }
 
-.lockBox button{
-  background:#2563eb;
-  color:#fff;
-  border:none;
-  padding:10px;
-  border-radius:6px;
+.lockIcon{
+  font-size:22px;
+  cursor:pointer;
+  margin-top:8px;
+  transition:0.2s;
+}
+
+.lockIcon:hover{
+  transform:scale(1.2);
 }
 
 #lockMsg{color:red;font-size:14px}
@@ -138,7 +141,7 @@ button{cursor:pointer}
   text-align:center;
 }
 
-/* شكل الجوال يرجع عمود واحد */
+/* الجوال */
 @media(max-width:768px){
   .container{
     grid-template-columns:1fr;
@@ -160,9 +163,7 @@ button{cursor:pointer}
     <h3>🔐 مستودع البيت</h3>
     <input type="password" id="lockPass" placeholder="ادخل كلمة المرور">
     <button onclick="unlock()">دخول</button>
-    <button onclick="showChangePass()" style="background:#6b7280;margin-top:6px;">
-      تغيير كلمة المرور
-    </button>
+    <div class="lockIcon" onclick="showChangePass()">🔑</div>
     <p id="lockMsg"></p>
   </div>
 </div>
@@ -278,58 +279,14 @@ searchBox.addEventListener("input",()=>{
   });
 });
 
-document.getElementById("saveBtn").onclick=async()=>{
-  if(!nameInput.value||!shelfSelect.value){
-    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
-    return;
-  }
-
-  let imageUrl="";
-  let file=imageInput.files[0];
-
-  if(file){
-    const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
-    await uploadBytes(imgRef,file);
-    imageUrl=await getDownloadURL(imgRef);
-  }
-
-  const data={
-    name:nameInput.value,
-    shelf:shelfSelect.value,
-    place:placeSelect.value,
-    notes:notesInput.value,
-    image:imageUrl
-  };
-
-  if(editId){
-    await updateDoc(doc(db,"items",editId),data);
-    editId=null;
-  }else{
-    await addDoc(collection(db,"items"),data);
-  }
-
-  loadData();
-  msg.innerText="✅ تم الحفظ";
-};
-
-document.getElementById("clearBtn").onclick=()=>{
-  nameInput.value="";
-  shelfSelect.value="";
-  placeSelect.value="";
-  notesInput.value="";
-  imageInput.value="";
-};
-
 async function loadData(){
   list.innerHTML="";
   gallery.innerHTML="";
   cache=[];
-
   const snap=await getDocs(collection(db,"items"));
   snap.forEach(d=>{
     const x={id:d.id,...d.data()};
     cache.push(x);
-
     const div=document.createElement("div");
     div.className="item";
     div.innerHTML=`
@@ -343,7 +300,6 @@ async function loadData(){
         <button class="btn-delete" onclick="deleteItem('${x.id}')">🗑️</button>
       </div>`;
     list.appendChild(div);
-
     if(x.image){
       const img=document.createElement("img");
       img.src=x.image;
@@ -378,15 +334,10 @@ let PASSWORD = localStorage.getItem("savedPass") || "1234";
 
 function unlock(){
   if(document.getElementById("lockPass").value===PASSWORD){
-    localStorage.setItem("ok","1");
     document.getElementById("lockScreen").style.display="none";
   }else{
     document.getElementById("lockMsg").innerText="كلمة المرور غير صحيحة";
   }
-}
-
-if(localStorage.getItem("ok")==="1"){
-  document.getElementById("lockScreen").style.display="none";
 }
 
 function showChangePass(){

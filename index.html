@@ -312,10 +312,21 @@ list.appendChild(div);
 /* عرض في الاستديو */
 if(x.image){
 const img=document.createElement("img");
-img.src=x.image;
-img.onclick=()=>editItem(x.id);   // ← مهم
+img.src = x.image;
+img.addEventListener("click", function(){
+    const item = cache.find(i => i.id === x.id);
+    if(!item) return;
+
+    nameInput.value = item.name;
+    shelfSelect.value = item.shelf;
+    placeSelect.value = item.place;
+    notesInput.value = item.notes;
+    editId = item.id;
+    msg.innerText = "✏️ وضع التعديل";
+});
 gallery.appendChild(img);
 }
+
 });
 }
 

@@ -2,6 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>مستودع البيت</title>
 
 <style>
@@ -80,10 +81,82 @@ button{cursor:pointer}
   border-radius:6px;
   cursor:pointer;
 }
+
+/* شاشة القفل */
+#lockScreen{
+  position:fixed;
+  inset:0;
+  background:#111827;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+}
+.lockBox{
+  background:#fff;
+  padding:25px;
+  border-radius:10px;
+  width:260px;
+  text-align:center;
+}
+.lockBox input{
+  padding:10px;
+}
+.lockBox button{
+  background:#2563eb;
+  color:#fff;
+  border:none;
+  padding:10px;
+  border-radius:6px;
+}
+#lockMsg{
+  color:red;
+  font-size:14px;
+}
+
+/* تكبير في الجوال */
+@media(max-width:768px){
+
+  body{
+    padding:10px;
+  }
+
+  button{
+    font-size:18px;
+    padding:12px;
+  }
+
+  .btn-edit,
+  .btn-delete{
+    font-size:20px;
+    padding:10px;
+  }
+
+  .item img{
+    width:90px;
+    height:90px;
+  }
+
+  input,select,textarea{
+    font-size:16px;
+    padding:10px;
+  }
+
+}
 </style>
 </head>
 
 <body>
+
+<!-- شاشة القفل -->
+<div id="lockScreen">
+  <div class="lockBox">
+    <h3>🔐 مستودع البيت</h3>
+    <input type="password" id="lockPass" placeholder="ادخل كلمة المرور">
+    <button onclick="unlock()">دخول</button>
+    <p id="lockMsg"></p>
+  </div>
+</div>
 
 <h2>📦 مستودع البيت</h2>
 
@@ -116,7 +189,6 @@ button{cursor:pointer}
 
 <textarea id="notes" placeholder="ملاحظات"></textarea>
 
-<!-- مهم للجوال -->
 <input type="file" id="image" accept="image/*" capture="environment">
 
 <button type="button" id="saveBtn">💾 حفظ</button>
@@ -127,6 +199,9 @@ button{cursor:pointer}
 
 <div class="card">
 <h3>المحتويات</h3>
+
+<input type="text" id="searchBox" placeholder="🔎 بحث بالاسم أو رقم الرف">
+
 <div id="list"></div>
 </div>
 
@@ -145,12 +220,12 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstati
 window.addEventListener("DOMContentLoaded",()=>{
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
-  authDomain: "warehouse-house.firebaseapp.com",
+  apiKey: "ضع_مفتاحك_هنا",
+  authDomain: "ضع_بياناتك",
   projectId: "warehouse-house",
   storageBucket: "warehouse-house.firebasestorage.app",
   messagingSenderId: "791378856906",
-  appId: "1:791378856906:web:69aa95b1c53e2791865d33"
+  appId: "ضع_بياناتك"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -165,11 +240,11 @@ const imageInput=document.getElementById("image");
 const list=document.getElementById("list");
 const gallery=document.getElementById("gallery");
 const msg=document.getElementById("msg");
+const searchBox=document.getElementById("searchBox");
 
 let editId=null;
 let cache=[];
 
-/* الرفوف */
 for(let i=1;i<=100;i++){
   const opt=document.createElement("option");
   opt.value=i;
@@ -177,12 +252,18 @@ for(let i=1;i<=100;i++){
   shelfSelect.appendChild(opt);
 }
 
-/* ضغط وتحويل صورة الجوال */
+searchBox.addEventListener("input",()=>{
+  const val=searchBox.value.toLowerCase();
+  document.querySelectorAll(".item").forEach(el=>{
+    const text=el.innerText.toLowerCase();
+    el.style.display=text.includes(val)?"flex":"none";
+  });
+});
+
 async function compressImage(file){
   return new Promise(resolve=>{
     const img=new Image();
     const reader=new FileReader();
-
     reader.onload=e=>img.src=e.target.result;
     img.onload=()=>{
       const canvas=document.createElement("canvas");
@@ -237,7 +318,6 @@ document.getElementById("saveBtn").onclick=async()=>{
     msg.innerText="✅ تم الحفظ";
 
   }catch(e){
-    console.error(e);
     msg.innerText="❌ خطأ أثناء الحفظ";
   }
 };
@@ -304,6 +384,24 @@ window.deleteItem=async id=>{
 
 loadData();
 });
+</script>
+
+<script>
+const PASSWORD="1234";
+
+function unlock(){
+  const val=document.getElementById("lockPass").value;
+  if(val===PASSWORD){
+    localStorage.setItem("ok","1");
+    document.getElementById("lockScreen").style.display="none";
+  }else{
+    document.getElementById("lockMsg").innerText="كلمة المرور غير صحيحة";
+  }
+}
+
+if(localStorage.getItem("ok")==="1"){
+  document.getElementById("lockScreen").style.display="none";
+}
 </script>
 
 </body>

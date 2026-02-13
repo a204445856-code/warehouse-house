@@ -2,245 +2,190 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>مستودع البيت V2</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>مستودع البيت</title>
 
 <style>
-body{font-family:Arial;background:#f5f6f7;padding:20px}
-h2{text-align:center}
-.container{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-.card{background:#fff;padding:15px;border-radius:8px}
-input,textarea,select,button{width:100%;padding:8px;margin:6px 0}
+*{box-sizing:border-box;font-family:Tajawal,Arial}
+body{margin:0;background:#f3f4f6}
+header{
+  background:#fff;
+  padding:15px 25px;
+  font-size:22px;
+  font-weight:bold;
+  border-bottom:1px solid #e5e7eb
+}
+.container{
+  display:grid;
+  grid-template-columns:1fr 1.3fr;
+  gap:20px;
+  padding:20px
+}
+.card{
+  background:#fff;
+  border-radius:10px;
+  padding:20px;
+  box-shadow:0 1px 4px rgba(0,0,0,.08)
+}
+
+/* القائمة */
+.search{margin-bottom:15px}
+.search input{
+  width:100%;padding:10px;border:1px solid #ddd;border-radius:8px
+}
 .item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid #ddd;
-  padding:8px 0;
+  display:flex;gap:12px;align-items:center;
+  padding:10px;border:1px solid #eee;
+  border-radius:10px;margin-bottom:10px
 }
 .item img{
-  width:60px;
-  height:60px;
-  object-fit:cover;
-  border-radius:6px;
-  cursor:pointer;
+  width:60px;height:60px;object-fit:cover;
+  border-radius:8px;background:#eee
 }
-#gallery{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-  gap:10px;
-  margin-top:10px
+.item-info{flex:1}
+.item-info b{display:block;margin-bottom:4px}
+.item-actions{
+  display:flex;flex-direction:column;gap:6px
 }
-#gallery img{
-  width:100%;
-  height:120px;
-  object-fit:cover;
-  border-radius:6px;
-  cursor:pointer
+.item-actions button{
+  border:none;padding:6px 10px;border-radius:6px;
+  cursor:pointer;color:#fff;font-size:13px
 }
-@media(max-width:768px){
+.edit{background:#f59e0b}
+.delete{background:#ef4444}
+
+/* النموذج */
+label{font-size:13px;color:#374151;margin-top:10px;display:block}
+input,select,textarea{
+  width:100%;padding:10px;margin-top:5px;
+  border:1px solid #ddd;border-radius:8px
+}
+textarea{resize:none;height:80px}
+.buttons{display:flex;gap:10px;margin-top:15px}
+.save{background:#2563eb;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
+.clear{background:#9ca3af;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
+.sync{background:#111827;color:#fff;border:none;padding:10px;border-radius:8px;flex:1}
+.note{margin-top:10px;font-size:12px;color:#6b7280}
+
+@media(max-width:900px){
   .container{grid-template-columns:1fr}
-  .item img{width:70px;height:70px}
 }
 </style>
 </head>
 
 <body>
 
-<h2>📦 مستودع البيت V2</h2>
+<header>📦 مستودع البيت</header>
 
 <div class="container">
 
+<!-- القائمة -->
 <div class="card">
-<h3>إضافة / تعديل</h3>
-
-<input id="name" placeholder="اسم الغرض *">
-
-<label>رقم الرف *</label>
-<select id="shelf"></select>
-
-<label>المكان</label>
-<select id="place"></select>
-<button type="button" id="addPlaceBtn">➕ إضافة مكان</button>
-
-<textarea id="notes" placeholder="ملاحظات"></textarea>
-
-<input type="file" id="image" accept="image/*" multiple>
-
-<button id="saveBtn">💾 حفظ</button>
-<p id="msg"></p>
+  <div class="search">
+    <input id="searchInput" placeholder="ابحث بالاسم" oninput="searchByName()">
+  </div>
+  <div id="items">جاري التحميل...</div>
 </div>
 
+<!-- الإدخال -->
 <div class="card">
-<h3>المحتويات</h3>
-<div id="list"></div>
+  <form id="itemForm"
+    action="https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec"
+    method="POST"
+    enctype="multipart/form-data"
+    target="hiddenFrame"
+    onsubmit="afterSubmit()">
+
+    <label>اسم الغرض *</label>
+    <input name="name" id="itemName" required>
+
+    <label>التصنيف</label>
+    <input name="category">
+
+    <label>رقم الرف</label>
+    <input name="shelf">
+
+    <label>المستوى</label>
+    <input name="level">
+
+    <label>ملاحظات</label>
+    <textarea name="notes"></textarea>
+
+    <label>صورة</label>
+    <input type="file" name="image" accept="image/*">
+
+    <div class="buttons">
+      <button class="save" type="submit">حفظ</button>
+      <button class="clear" type="reset">مسح الحقول</button>
+      <button class="sync" type="button" onclick="loadItems()">تحديث من السحابة</button>
+    </div>
+
+    <div class="note">
+      التخزين يتم في Google Sheets + الصور في Google Drive
+    </div>
+  </form>
+
+  <iframe name="hiddenFrame" style="display:none"></iframe>
 </div>
 
 </div>
 
-<div class="card" style="margin-top:20px">
-<h3>🖼️ استديو الصور</h3>
-<div id="gallery"></div>
-</div>
+<script>
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec";
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+let ITEMS=[];
 
-/* بياناتك الحقيقية */
-const firebaseConfig = {
-  apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
-  authDomain: "warehouse-house.firebaseapp.com",
-  projectId: "warehouse-house",
-  storageBucket: "warehouse-house.firebasestorage.app",
-  messagingSenderId: "791378856906",
-  appId: "1:791378856906:web:69aa95b1c53e2791865d33"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-const nameInput=document.getElementById("name");
-const shelfSelect=document.getElementById("shelf");
-const placeSelect=document.getElementById("place");
-const notesInput=document.getElementById("notes");
-const imageInput=document.getElementById("image");
-const list=document.getElementById("list");
-const gallery=document.getElementById("gallery");
-const msg=document.getElementById("msg");
-
-let editId=null;
-let cache=[];
-
-/* رفوف */
-for(let i=1;i<=100;i++){
-  let opt=document.createElement("option");
-  opt.value=i;
-  opt.textContent="رف "+i;
-  shelfSelect.appendChild(opt);
+function afterSubmit(){
+  setTimeout(()=>{
+    itemForm.reset();
+    loadItems();
+  },1500);
 }
 
-/* تحميل الأماكن */
-async function loadPlaces(){
-  placeSelect.innerHTML='<option value="">-- اختر المكان --</option>';
-  const snap=await getDocs(collection(db,"places"));
-  snap.forEach(d=>{
-    let opt=document.createElement("option");
-    opt.value=d.data().name;
-    opt.textContent=d.data().name;
-    placeSelect.appendChild(opt);
-  });
+async function loadItems(){
+  const r=await fetch(SCRIPT_URL+"?action=list");
+  ITEMS=await r.json();
+  renderItems(ITEMS);
 }
 
-/* إضافة مكان */
-document.getElementById("addPlaceBtn").onclick=async()=>{
-  let newPlace=prompt("اكتب اسم المكان الجديد");
-  if(!newPlace) return;
-  await addDoc(collection(db,"places"),{name:newPlace});
-  loadPlaces();
-};
-
-/* حفظ */
-document.getElementById("saveBtn").onclick=async()=>{
-  if(!nameInput.value||!shelfSelect.value){
-    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
+function renderItems(arr){
+  items.innerHTML="";
+  if(!arr.length){
+    items.innerHTML="لا توجد عناصر";
     return;
   }
-
-  try{
-    let imageUrls=[];
-    let files=imageInput.files;
-
-    for(let i=0;i<files.length && i<5;i++){
-      let file=files[i];
-      let imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
-      await uploadBytes(imgRef,file);
-      let url=await getDownloadURL(imgRef);
-      imageUrls.push(url);
-    }
-
-    let data={
-      name:nameInput.value,
-      shelf:shelfSelect.value,
-      place:placeSelect.value,
-      notes:notesInput.value,
-      images:imageUrls
-    };
-
-    if(editId){
-      await updateDoc(doc(db,"items",editId),data);
-      editId=null;
-    }else{
-      await addDoc(collection(db,"items"),data);
-    }
-
-    loadData();
-    msg.innerText="✅ تم الحفظ";
-
-  }catch(error){
-    console.error(error);
-    msg.innerText="❌ خطأ في رفع الصورة";
-  }
-};
-
-/* تحميل البيانات */
-async function loadData(){
-  list.innerHTML="";
-  gallery.innerHTML="";
-  cache=[];
-
-  const snap=await getDocs(collection(db,"items"));
-  snap.forEach(d=>{
-    let x={id:d.id,...d.data()};
-    cache.push(x);
-
-    /* عرض في المحتويات */
-    let div=document.createElement("div");
-    div.className="item";
-
-    let firstImage="";
-    if(x.images && x.images.length>0){
-      firstImage=`<img src="${x.images[0]}" onclick="event.stopPropagation(); editItem('${x.id}')">`;
-    }
-
-    div.innerHTML=`
-      <div>
-        <b>${x.name}</b><br>
-        رف ${x.shelf} - ${x.place||""}
+  arr.forEach((i,idx)=>{
+    items.innerHTML+=`
+      <div class="item">
+        ${i.image?`<img src="${i.image}">`:`<img>`}
+        <div class="item-info">
+          <b>${i.name}</b>
+          رف - ${i.shelf||"-"}
+        </div>
+        <div class="item-actions">
+          <button class="edit" onclick="fillForm(${idx})">تعديل</button>
+        </div>
       </div>
-      <div>${firstImage}</div>
     `;
-
-    div.onclick=()=>editItem(x.id);
-    list.appendChild(div);
-
-    /* عرض في الاستديو */
-    if(x.images){
-      x.images.forEach(url=>{
-        let img=document.createElement("img");
-        img.src=url;
-        img.onclick=()=>editItem(x.id);
-        gallery.appendChild(img);
-      });
-    }
   });
 }
 
-window.editItem=id=>{
-  let x=cache.find(i=>i.id===id);
-  if(!x)return;
-  nameInput.value=x.name;
-  shelfSelect.value=x.shelf;
-  placeSelect.value=x.place;
-  notesInput.value=x.notes;
-  editId=id;
-  window.scrollTo({top:0,behavior:"smooth"});
-};
+function fillForm(i){
+  const d=ITEMS[i];
+  itemName.value=d.name;
+  document.querySelector('[name=category]').value=d.category||"";
+  document.querySelector('[name=shelf]').value=d.shelf||"";
+  document.querySelector('[name=level]').value=d.level||"";
+  document.querySelector('[name=notes]').value=d.notes||"";
+}
 
-loadPlaces();
-loadData();
+function searchByName(){
+  const q=searchInput.value.trim();
+  renderItems(q?ITEMS.filter(i=>i.name.includes(q)):ITEMS);
+}
+
+loadItems();
 </script>
 
 </body>

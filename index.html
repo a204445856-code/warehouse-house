@@ -1,259 +1,352 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>مستودع البيت</title>
 
 <style>
-body{
-  font-family: Arial;
-  background:#f5f6f7;
-  padding:20px;
-}
-h2{text-align:center}
+body{font-family:Tahoma,Arial;background:#f5f6f7;margin:0}
+header{text-align:center;padding:20px;font-size:26px}
+.container{display:flex;gap:20px;padding:20px;flex-wrap:wrap}
+.card{background:#fff;border-radius:10px;padding:15px;box-shadow:0 2px 6px rgba(0,0,0,.1);flex:1;min-width:320px}
 
-.container{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
+input,select,textarea,button{
+  width:100%;padding:8px;margin-top:6px;font-size:14px
 }
-
-.card{
-  background:#fff;
-  padding:15px;
-  border-radius:8px;
+button{
+  background:#2563eb;color:#fff;border:none;
+  border-radius:6px;padding:10px;cursor:pointer
 }
 
-input, textarea, select, button{
-  width:100%;
-  padding:8px;
-  margin:6px 0;
-}
-
-button{cursor:pointer}
-
-#list{
-  max-height:420px;
-  overflow-y:auto;
+.top-bar{display:flex;gap:8px;align-items:center}
+.icon-btn{
+  background:#2563eb;color:#fff;border:none;
+  border-radius:6px;padding:6px 10px;
+  font-size:18px;cursor:pointer
 }
 
 .item{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  border-bottom:1px solid #ddd;
-  padding:8px 0;
+  display:flex;align-items:center;gap:8px;
+  border-bottom:1px solid #eee;padding:6px 0
 }
-
 .item img{
-  width:60px;
-  height:60px;
-  object-fit:cover;
-  border-radius:6px;
-  cursor:pointer;
+  width:40px;height:40px;object-fit:cover;border-radius:6px
+}
+.item-name{flex:1;cursor:pointer}
+.item-actions span{
+  cursor:pointer;margin-right:6px;font-size:18px
 }
 
-#gallery{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-  gap:10px;
-  margin-top:10px;
+/* معرض الصور */
+.gallery-screen{
+  display:none;position:fixed;inset:0;
+  background:#fff;z-index:1000;
+  padding:20px;overflow:auto
 }
-
-#gallery img{
-  width:100%;
-  height:120px;
-  object-fit:cover;
-  border-radius:6px;
-  cursor:pointer;
+.gallery{
+  display:flex;flex-wrap:wrap;gap:10px
 }
-
-@media(max-width:768px){
-  .container{
-    grid-template-columns:1fr;
-  }
+.gallery img{
+  width:90px;height:90px;object-fit:cover;
+  border-radius:6px;cursor:pointer
 }
+.close{font-size:20px;cursor:pointer}
 </style>
 </head>
 
 <body>
 
-<h2>📦 مستودع البيت</h2>
+<header>📦 مستودع البيت</header>
 
 <div class="container">
 
+<!-- القائمة -->
 <div class="card">
-<h3>إضافة / تعديل</h3>
-
-<input id="name" placeholder="اسم الغرض *">
-
-<label>رقم الرف *</label>
-<select id="shelf"></select>
-
-<label>المكان</label>
-<select id="place">
-<option value="">-- اختر المكان --</option>
-<option>البدروم</option>
-<option>رف أيمن</option>
-<option>رف أيسر</option>
-<option>رف أمام</option>
-<option>المطبخ</option>
-<option>غرفة البنات</option>
-<option>غرفة الأولاد</option>
-<option>الصالة</option>
-<option>تحت المغسلة</option>
-<option>غرفتي</option>
-<option>استقبال</option>
-<option>استقبال البيت</option>
-</select>
-
-<textarea id="notes" placeholder="ملاحظات"></textarea>
-
-<input type="file" id="image" accept="image/*">
-
-<button id="saveBtn">💾 حفظ</button>
-<p id="msg"></p>
+  <div class="top-bar">
+    <input id="searchInput" placeholder="🔍 ابحث بالاسم..." oninput="searchByName()">
+    <button class="icon-btn" onclick="openGallery()">🖼️</button>
+  </div>
+  <div id="items">جاري التحميل...</div>
 </div>
 
+<!-- الإدخال -->
 <div class="card">
-<h3>المحتويات</h3>
-<div id="list"></div>
+  <h3>إضافة / تعديل غرض</h3>
+
+  <!-- 🔑 النموذج الحقيقي -->
+  <form id="itemForm"
+        action="https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec"
+        method="POST"
+        enctype="multipart/form-data"
+        target="hiddenFrame"
+        onsubmit="afterSubmit()">
+
+    <input name="name" id="itemName" placeholder="اسم الغرض" required>
+
+    <select name="category" id="category">
+      <option value="">المنطقة / القسم</option>
+      <option>مستودع يمين</option>
+      <option>مستودع يسار</option>
+      <option>مطبخ</option>
+      <option>صالة</option>
+      <option>غرفة البنات</option>
+      <option>غرفة الأولاد</option>
+      <option>غرفة النوم</option>
+    </select>
+
+    <select name="shelf" id="shelf"><option value="">رقم الرف</option></select>
+
+    <select name="level" id="level">
+      <option value="">المستوى</option>
+      <option>أعلى</option>
+      <option>وسط</option>
+      <option>أسفل</option>
+    </select>
+
+    <textarea name="notes" id="notes" placeholder="ملاحظات"></textarea>
+    <input type="file" name="image" id="image" accept="image/*">
+
+    <button type="submit">حفظ</button>
+  </form>
+
+  <!-- iframe مخفي -->
+  <iframe name="hiddenFrame" style="display:none"></iframe>
 </div>
 
 </div>
 
-<div class="card" style="margin-top:20px">
-<h3>🖼️ استديو الصور</h3>
-<div id="gallery"></div>
+<!-- معرض الصور -->
+<div class="gallery-screen" id="galleryScreen">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <h3>🖼️ معرض الصور</h3>
+    <span class="close" onclick="closeGallery()">✖</span>
+  </div>
+  <div class="gallery" id="galleryImages"></div>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+<script>
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbxST_WcgWG8mAKONieRUQhIj_fgwYQxkOHvhQx8wCJJ42-r2LM8e-24_8BS2k1vfpA/exec";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
-  authDomain: "warehouse-house.firebaseapp.com",
-  projectId: "warehouse-house",
-  storageBucket: "warehouse-house.firebasestorage.app",
-  messagingSenderId: "791378856906",
-  appId: "1:791378856906:web:69aa95b1c53e2791865d33"
-};
+let ITEMS=[];
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-const nameInput=document.getElementById("name");
-const shelfSelect=document.getElementById("shelf");
-const placeSelect=document.getElementById("place");
-const notesInput=document.getElementById("notes");
-const imageInput=document.getElementById("image");
-const list=document.getElementById("list");
-const gallery=document.getElementById("gallery");
-const msg=document.getElementById("msg");
-
-let editId=null;
-let cache=[];
-
+/* الأرفف */
 for(let i=1;i<=100;i++){
-  const opt=document.createElement("option");
-  opt.value=i;
-  opt.textContent="رف "+i;
-  shelfSelect.appendChild(opt);
+  shelf.innerHTML+=`<option>${i}</option>`;
 }
 
-document.getElementById("saveBtn").onclick=async()=>{
-  if(!nameInput.value||!shelfSelect.value){
-    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
+/* بعد الحفظ */
+function afterSubmit(){
+  setTimeout(()=>{
+    itemForm.reset();
+    loadItems();
+  },1500);
+}
+
+/* تحميل */
+async function loadItems(){
+  const r=await fetch(SCRIPT_URL+"?action=list");
+  ITEMS=await r.json();
+  renderItems(ITEMS);
+}
+
+/* عرض القائمة */
+function renderItems(arr){
+  items.innerHTML="";
+  if(!arr.length){
+    items.innerHTML="لا توجد بيانات";
     return;
   }
-
-  try{
-
-    let imageUrl="";
-    let file=imageInput.files[0];
-
-    if(file){
-      const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
-      await uploadBytes(imgRef,file);
-      imageUrl=await getDownloadURL(imgRef);
-    }
-
-    const data={
-      name:nameInput.value,
-      shelf:shelfSelect.value,
-      place:placeSelect.value,
-      notes:notesInput.value,
-      image:imageUrl
-    };
-
-    if(editId){
-      await updateDoc(doc(db,"items",editId),data);
-      editId=null;
-    }else{
-      await addDoc(collection(db,"items"),data);
-    }
-
-    loadData();
-    msg.innerText="✅ تم الحفظ";
-
-  }catch(e){
-    console.error(e);
-    msg.innerText="❌ خطأ في رفع الصورة";
-  }
-};
-
-async function loadData(){
-  list.innerHTML="";
-  gallery.innerHTML="";
-  cache=[];
-
-  const snap=await getDocs(collection(db,"items"));
-  snap.forEach(d=>{
-    const x={id:d.id,...d.data()};
-    cache.push(x);
-
-    const div=document.createElement("div");
-    div.className="item";
-
-    div.innerHTML=`
-      <div>
-        <b>${x.name}</b><br>
-        رف ${x.shelf} - ${x.place||""}
-      </div>
-      <div>
-        ${x.image ? `<img src="${x.image}" onclick="event.stopPropagation(); editItem('${x.id}')">` : ""}
+  arr.forEach((i,idx)=>{
+    items.innerHTML+=`
+      <div class="item">
+        ${i.image ? `<img src="${i.image}">` : ``}
+        <div class="item-name" onclick="fillForm(${idx})">${i.name}</div>
+        <div class="item-actions">
+          <span onclick="fillForm(${idx})">✏️</span>
+          <span onclick="removeUI(${idx})">🗑️</span>
+        </div>
       </div>
     `;
-
-    div.onclick=()=>editItem(x.id);
-    list.appendChild(div);
-
-    if(x.image){
-      const img=document.createElement("img");
-      img.src=x.image;
-      img.onclick=()=>editItem(x.id);
-      gallery.appendChild(img);
-    }
   });
 }
 
-window.editItem=id=>{
-  const x=cache.find(i=>i.id===id);
-  if(!x)return;
-  nameInput.value=x.name;
-  shelfSelect.value=x.shelf;
-  placeSelect.value=x.place;
-  notesInput.value=x.notes;
-  editId=id;
-  window.scrollTo({top:0,behavior:"smooth"});
-};
+/* تعبئة النموذج */
+function fillForm(index){
+  const i=ITEMS[index];
+  itemName.value=i.name;
+  category.value=i.category;
+  shelf.value=i.shelf;
+  level.value=i.level;
+  notes.value=i.notes||"";
+}
 
-loadData();
+/* حذف (واجهة فقط) */
+function removeUI(index){
+  if(!confirm("حذف من الواجهة فقط؟")) return;
+  ITEMS.splice(index,1);
+  renderItems(ITEMS);
+}
+
+/* بحث */
+function searchByName(){
+  const q=searchInput.value.trim();
+  renderItems(q?ITEMS.filter(i=>i.name.startsWith(q)):ITEMS);
+}
+
+/* معرض الصور */
+function openGallery(){
+  galleryImages.innerHTML="";
+  ITEMS.forEach((i,idx)=>{
+    if(i.image){
+      galleryImages.innerHTML+=`
+        <img src="${i.image}" onclick="fillForm(${idx});closeGallery()">
+      `;
+    }
+  });
+  galleryScreen.style.display="block";
+}
+function closeGallery(){
+  galleryScreen.style.display="none";
+}
+
+loadItems();
 </script>
 
 </body>
 </html>
+
+
+const SHEET_ID = "1foENTEF7sgI5bHaPNq1nIe4JD9Boo1kbnetJWwIa9Fg";
+
+function doGet(e) {
+  if (!e || !e.parameter) {
+    return json([]);
+  }
+
+  if (e.parameter.action === "list") {
+    const sh = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    const rows = sh.getDataRange().getValues();
+    rows.shift();
+
+    const data = rows.map(r => ({
+      name: r[1],
+      category: r[2],
+      shelf: r[3],
+      level: r[5],
+      notes: r[7],
+      image: r[9]
+    })).filter(i => i.name);
+
+    return json(data);
+  }
+
+  return json([]);
+}
+
+function doPost(e) {
+  const sh = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+  const p = e.parameter;
+
+  let imageUrl = "";
+
+  // ✅ الطريقة الصحيحة مع <form>
+  if (p.image) {
+    const blob = p.image;
+    const file = DriveApp.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+    imageUrl = "https://drive.google.com/uc?id=" + file.getId();
+  }
+
+  sh.appendRow([
+    sh.getLastRow(),
+    p.name || "",
+    p.category || "",
+    p.shelf || "",
+    "",
+    p.level || "",
+    "",
+    p.notes || "",
+    new Date(),
+    imageUrl
+  ]);
+
+  return json({ status: "success" });
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+
+const SHEET_ID = "1foENTEF7sgI5bHaPNq1nIe4JD9Boo1kbnetJWwIa9Fg";
+
+function doGet(e) {
+  if (!e || !e.parameter) {
+    return json([]);
+  }
+
+  if (e.parameter.action === "list") {
+    const sh = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+    const rows = sh.getDataRange().getValues();
+    rows.shift();
+
+    const data = rows.map(r => ({
+      name: r[1],
+      category: r[2],
+      shelf: r[3],
+      level: r[5],
+      notes: r[7],
+      image: r[9]
+    })).filter(i => i.name);
+
+    return json(data);
+  }
+
+  return json([]);
+}
+
+function doPost(e) {
+  const sh = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
+  const p = e.parameter;
+
+  let imageUrl = "";
+
+  // ✅ الطريقة الصحيحة مع <form>
+  if (p.image) {
+    const blob = p.image;
+    const file = DriveApp.createFile(blob);
+    file.setSharing(DriveApp.Access.ANYONE, DriveApp.Permission.VIEW);
+    imageUrl = "https://drive.google.com/uc?id=" + file.getId();
+  }
+
+  sh.appendRow([
+    sh.getLastRow(),
+    p.name || "",
+    p.category || "",
+    p.shelf || "",
+    "",
+    p.level || "",
+    "",
+    p.notes || "",
+    new Date(),
+    imageUrl
+  ]);
+
+  return json({ status: "success" });
+}
+
+function json(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+
+

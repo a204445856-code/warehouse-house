@@ -11,11 +11,37 @@ h2{text-align:center}
 .container{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .card{background:#fff;padding:15px;border-radius:8px}
 input,textarea,select,button{width:100%;padding:8px;margin:6px 0}
-.item{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ddd;padding:8px 0}
-.item img{width:60px;height:60px;object-fit:cover;border-radius:4px;cursor:pointer}
-#gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:10px}
-#gallery img{width:100%;height:120px;object-fit:cover;border-radius:6px;cursor:pointer}
-@media(max-width:768px){.container{grid-template-columns:1fr}}
+.item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #ddd;
+  padding:8px 0;
+}
+.item img{
+  width:60px;
+  height:60px;
+  object-fit:cover;
+  border-radius:6px;
+  cursor:pointer;
+}
+#gallery{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;
+  margin-top:10px
+}
+#gallery img{
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:6px;
+  cursor:pointer
+}
+@media(max-width:768px){
+  .container{grid-template-columns:1fr}
+  .item img{width:70px;height:70px}
+}
 </style>
 </head>
 
@@ -62,7 +88,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore, collection, addDoc, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-/* 🔥 بياناتك الحقيقية */
+/* بياناتك الحقيقية */
 const firebaseConfig = {
   apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
   authDomain: "warehouse-house.firebaseapp.com",
@@ -90,114 +116,127 @@ let cache=[];
 
 /* رفوف */
 for(let i=1;i<=100;i++){
-let opt=document.createElement("option");
-opt.value=i;
-opt.textContent="رف "+i;
-shelfSelect.appendChild(opt);
+  let opt=document.createElement("option");
+  opt.value=i;
+  opt.textContent="رف "+i;
+  shelfSelect.appendChild(opt);
 }
 
 /* تحميل الأماكن */
 async function loadPlaces(){
-placeSelect.innerHTML='<option value="">-- اختر المكان --</option>';
-const snap=await getDocs(collection(db,"places"));
-snap.forEach(d=>{
-let opt=document.createElement("option");
-opt.value=d.data().name;
-opt.textContent=d.data().name;
-placeSelect.appendChild(opt);
-});
+  placeSelect.innerHTML='<option value="">-- اختر المكان --</option>';
+  const snap=await getDocs(collection(db,"places"));
+  snap.forEach(d=>{
+    let opt=document.createElement("option");
+    opt.value=d.data().name;
+    opt.textContent=d.data().name;
+    placeSelect.appendChild(opt);
+  });
 }
 
 /* إضافة مكان */
 document.getElementById("addPlaceBtn").onclick=async()=>{
-let newPlace=prompt("اكتب اسم المكان الجديد");
-if(!newPlace) return;
-await addDoc(collection(db,"places"),{name:newPlace});
-loadPlaces();
+  let newPlace=prompt("اكتب اسم المكان الجديد");
+  if(!newPlace) return;
+  await addDoc(collection(db,"places"),{name:newPlace});
+  loadPlaces();
 };
 
 /* حفظ */
 document.getElementById("saveBtn").onclick=async()=>{
-if(!nameInput.value||!shelfSelect.value){
-msg.innerText="❌ الاسم ورقم الرف مطلوبين";
-return;
-}
+  if(!nameInput.value||!shelfSelect.value){
+    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
+    return;
+  }
 
-try{
+  try{
+    let imageUrls=[];
+    let files=imageInput.files;
 
-let imageUrls=[];
-let files=imageInput.files;
+    for(let i=0;i<files.length && i<5;i++){
+      let file=files[i];
+      let imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
+      await uploadBytes(imgRef,file);
+      let url=await getDownloadURL(imgRef);
+      imageUrls.push(url);
+    }
 
-for(let i=0;i<files.length && i<5;i++){
-let file=files[i];
-let imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
-await uploadBytes(imgRef,file);
-let url=await getDownloadURL(imgRef);
-imageUrls.push(url);
-}
+    let data={
+      name:nameInput.value,
+      shelf:shelfSelect.value,
+      place:placeSelect.value,
+      notes:notesInput.value,
+      images:imageUrls
+    };
 
-let data={
-name:nameInput.value,
-shelf:shelfSelect.value,
-place:placeSelect.value,
-notes:notesInput.value,
-images:imageUrls
-};
+    if(editId){
+      await updateDoc(doc(db,"items",editId),data);
+      editId=null;
+    }else{
+      await addDoc(collection(db,"items"),data);
+    }
 
-if(editId){
-await updateDoc(doc(db,"items",editId),data);
-editId=null;
-}else{
-await addDoc(collection(db,"items"),data);
-}
+    loadData();
+    msg.innerText="✅ تم الحفظ";
 
-loadData();
-msg.innerText="✅ تم الحفظ";
-
-}catch(error){
-console.error(error);
-msg.innerText="❌ خطأ في رفع الصورة";
-}
-
+  }catch(error){
+    console.error(error);
+    msg.innerText="❌ خطأ في رفع الصورة";
+  }
 };
 
 /* تحميل البيانات */
 async function loadData(){
-list.innerHTML="";
-gallery.innerHTML="";
-cache=[];
+  list.innerHTML="";
+  gallery.innerHTML="";
+  cache=[];
 
-const snap=await getDocs(collection(db,"items"));
-snap.forEach(d=>{
-let x={id:d.id,...d.data()};
-cache.push(x);
+  const snap=await getDocs(collection(db,"items"));
+  snap.forEach(d=>{
+    let x={id:d.id,...d.data()};
+    cache.push(x);
 
-let div=document.createElement("div");
-div.className="item";
-div.innerHTML=`<b>${x.name}</b> - رف ${x.shelf} - ${x.place||""}`;
-div.onclick=()=>editItem(x.id);
-list.appendChild(div);
+    /* عرض في المحتويات */
+    let div=document.createElement("div");
+    div.className="item";
 
-if(x.images){
-x.images.forEach(url=>{
-let img=document.createElement("img");
-img.src=url;
-img.onclick=()=>editItem(x.id);
-gallery.appendChild(img);
-});
-}
-});
+    let firstImage="";
+    if(x.images && x.images.length>0){
+      firstImage=`<img src="${x.images[0]}" onclick="event.stopPropagation(); editItem('${x.id}')">`;
+    }
+
+    div.innerHTML=`
+      <div>
+        <b>${x.name}</b><br>
+        رف ${x.shelf} - ${x.place||""}
+      </div>
+      <div>${firstImage}</div>
+    `;
+
+    div.onclick=()=>editItem(x.id);
+    list.appendChild(div);
+
+    /* عرض في الاستديو */
+    if(x.images){
+      x.images.forEach(url=>{
+        let img=document.createElement("img");
+        img.src=url;
+        img.onclick=()=>editItem(x.id);
+        gallery.appendChild(img);
+      });
+    }
+  });
 }
 
 window.editItem=id=>{
-let x=cache.find(i=>i.id===id);
-if(!x)return;
-nameInput.value=x.name;
-shelfSelect.value=x.shelf;
-placeSelect.value=x.place;
-notesInput.value=x.notes;
-editId=id;
-window.scrollTo({top:0,behavior:"smooth"});
+  let x=cache.find(i=>i.id===id);
+  if(!x)return;
+  nameInput.value=x.name;
+  shelfSelect.value=x.shelf;
+  placeSelect.value=x.place;
+  notesInput.value=x.notes;
+  editId=id;
+  window.scrollTo({top:0,behavior:"smooth"});
 };
 
 loadPlaces();

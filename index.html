@@ -6,137 +6,78 @@
 <title>مستودع البيت</title>
 
 <style>
-body{font-family:Arial;background:#f5f6f7;padding:20px}
+body{
+  font-family: Arial;
+  background:#f5f6f7;
+  padding:20px;
+}
 h2{text-align:center}
 
 .container{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:20px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:20px;
 }
 
 .card{
-background:#fff;
-padding:15px;
-border-radius:8px;
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
 }
 
-input,textarea,select,button{
-width:100%;
-padding:8px;
-margin:6px 0;
+input, textarea, select, button{
+  width:100%;
+  padding:8px;
+  margin:6px 0;
 }
 
-#list{max-height:420px;overflow-y:auto}
+button{cursor:pointer}
+
+#list{
+  max-height:420px;
+  overflow-y:auto;
+}
 
 .item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:1px solid #ddd;
-padding:8px 0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #ddd;
+  padding:8px 0;
 }
-
-.item-right{display:flex;align-items:center;gap:6px}
 
 .item img{
-width:60px;
-height:60px;
-object-fit:cover;
-border-radius:4px;
-cursor:pointer;
+  width:60px;
+  height:60px;
+  object-fit:cover;
+  border-radius:6px;
+  cursor:pointer;
 }
 
-.btn-edit{background:#f59e0b;color:#fff;border:none;padding:6px 8px;border-radius:4px}
-.btn-delete{background:#ef4444;color:#fff;border:none;padding:6px 8px;border-radius:4px}
-
 #gallery{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
-gap:10px;
-margin-top:10px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:10px;
+  margin-top:10px;
 }
 
 #gallery img{
-width:100%;
-height:120px;
-object-fit:cover;
-border-radius:6px;
-cursor:pointer;
-}
-
-/* القفل */
-#lockScreen{
-position:fixed;
-inset:0;
-background:#111827;
-display:flex;
-justify-content:center;
-align-items:center;
-z-index:9999;
-}
-
-.lockBox{
-background:#fff;
-padding:25px;
-border-radius:10px;
-width:260px;
-text-align:center;
-}
-
-#lockMsg{color:red;font-size:14px}
-
-/* تغيير كلمة المرور */
-#changePassBox{
-display:none;
-position:fixed;
-inset:0;
-background:#000000aa;
-z-index:10000;
-justify-content:center;
-align-items:center;
-}
-
-#changePassBox .inner{
-background:#fff;
-padding:20px;
-border-radius:10px;
-width:260px;
-text-align:center;
+  width:100%;
+  height:120px;
+  object-fit:cover;
+  border-radius:6px;
+  cursor:pointer;
 }
 
 @media(max-width:768px){
-.container{grid-template-columns:1fr}
-body{padding:12px}
-.item img{width:70px;height:70px}
+  .container{
+    grid-template-columns:1fr;
+  }
 }
 </style>
 </head>
 
 <body>
-
-<!-- شاشة القفل -->
-<div id="lockScreen">
-<div class="lockBox">
-<h3>🔐 مستودع البيت</h3>
-<input type="password" id="lockPass" placeholder="ادخل كلمة المرور">
-<button onclick="unlock()">دخول</button>
-<button onclick="showChangePass()" style="background:#6b7280;margin-top:6px;">تغيير كلمة المرور</button>
-<p id="lockMsg"></p>
-</div>
-</div>
-
-<!-- تغيير كلمة المرور -->
-<div id="changePassBox">
-<div class="inner">
-<h4>تغيير كلمة المرور</h4>
-<input type="password" id="oldPass" placeholder="الحالية">
-<input type="password" id="newPass" placeholder="الجديدة">
-<button onclick="changePassword()">حفظ</button>
-<button onclick="closeChangePass()" style="background:#ef4444;margin-top:6px;">إلغاء</button>
-<p id="changeMsg"></p>
-</div>
-</div>
 
 <h2>📦 مستودع البيت</h2>
 
@@ -154,25 +95,29 @@ body{padding:12px}
 <select id="place">
 <option value="">-- اختر المكان --</option>
 <option>البدروم</option>
+<option>رف أيمن</option>
+<option>رف أيسر</option>
+<option>رف أمام</option>
 <option>المطبخ</option>
-<option>الصالة</option>
 <option>غرفة البنات</option>
 <option>غرفة الأولاد</option>
+<option>الصالة</option>
 <option>تحت المغسلة</option>
+<option>غرفتي</option>
+<option>استقبال</option>
+<option>استقبال البيت</option>
 </select>
 
 <textarea id="notes" placeholder="ملاحظات"></textarea>
+
 <input type="file" id="image" accept="image/*">
 
-<button type="button" id="saveBtn">💾 حفظ</button>
-<button type="button" id="clearBtn">🧹 مسح</button>
-
+<button id="saveBtn">💾 حفظ</button>
 <p id="msg"></p>
 </div>
 
 <div class="card">
 <h3>المحتويات</h3>
-<input type="text" id="searchBox" placeholder="🔎 بحث">
 <div id="list"></div>
 </div>
 
@@ -185,47 +130,21 @@ body{padding:12px}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { 
-getFirestore, collection, addDoc, getDocs, doc, 
-updateDoc, deleteDoc, getDoc, setDoc 
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-window.addEventListener("DOMContentLoaded",async()=>{
-
 const firebaseConfig = {
-  apiKey: "ضع_بياناتك",
-  authDomain: "ضع_بياناتك",
+  apiKey: "AIzaSyAR9N2AkOv-pyEEWf4rE68vEgET7pBx83s",
+  authDomain: "warehouse-house.firebaseapp.com",
   projectId: "warehouse-house",
-  storageBucket: "warehouse-house.appspot.com",
+  storageBucket: "warehouse-house.firebasestorage.app",
   messagingSenderId: "791378856906",
-  appId: "ضع_بياناتك"
+  appId: "1:791378856906:web:69aa95b1c53e2791865d33"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
-
-let PASSWORD="";
-
-/* تحميل كلمة المرور الموحدة */
-async function loadPassword(){
-const snap = await getDoc(doc(db,"settings","config"));
-if(!snap.exists()){
-await setDoc(doc(db,"settings","config"),{password:"1234"});
-PASSWORD="1234";
-}else{
-PASSWORD=snap.data().password;
-}
-window.PASSWORD = PASSWORD;
-}
-await loadPassword();
-
-/* تحديث كلمة المرور */
-window.updatePasswordInDB = async function(newPass){
-await setDoc(doc(db,"settings","config"),{password:newPass});
-window.PASSWORD=newPass;
-};
 
 const nameInput=document.getElementById("name");
 const shelfSelect=document.getElementById("shelf");
@@ -235,162 +154,105 @@ const imageInput=document.getElementById("image");
 const list=document.getElementById("list");
 const gallery=document.getElementById("gallery");
 const msg=document.getElementById("msg");
-const searchBox=document.getElementById("searchBox");
 
 let editId=null;
 let cache=[];
 
-/* إنشاء الرفوف */
 for(let i=1;i<=100;i++){
-const opt=document.createElement("option");
-opt.value=i;
-opt.textContent="رف "+i;
-shelfSelect.appendChild(opt);
+  const opt=document.createElement("option");
+  opt.value=i;
+  opt.textContent="رف "+i;
+  shelfSelect.appendChild(opt);
 }
 
-/* البحث */
-searchBox.addEventListener("input",()=>{
-const val=searchBox.value.toLowerCase();
-document.querySelectorAll(".item").forEach(el=>{
-el.style.display=el.innerText.toLowerCase().includes(val)?"flex":"none";
-});
-});
-
-/* الحفظ */
 document.getElementById("saveBtn").onclick=async()=>{
-if(!nameInput.value||!shelfSelect.value){
-msg.innerText="❌ الاسم ورقم الرف مطلوبين";
-return;
-}
+  if(!nameInput.value||!shelfSelect.value){
+    msg.innerText="❌ الاسم ورقم الرف مطلوبين";
+    return;
+  }
 
-let imageUrl="";
-let file=imageInput.files[0];
+  try{
 
-if(file){
-const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
-await uploadBytes(imgRef,file);
-imageUrl=await getDownloadURL(imgRef);
-}
+    let imageUrl="";
+    let file=imageInput.files[0];
 
-const data={
-name:nameInput.value,
-shelf:shelfSelect.value,
-place:placeSelect.value,
-notes:notesInput.value,
-image:imageUrl
+    if(file){
+      const imgRef=ref(storage,"images/"+Date.now()+"_"+file.name);
+      await uploadBytes(imgRef,file);
+      imageUrl=await getDownloadURL(imgRef);
+    }
+
+    const data={
+      name:nameInput.value,
+      shelf:shelfSelect.value,
+      place:placeSelect.value,
+      notes:notesInput.value,
+      image:imageUrl
+    };
+
+    if(editId){
+      await updateDoc(doc(db,"items",editId),data);
+      editId=null;
+    }else{
+      await addDoc(collection(db,"items"),data);
+    }
+
+    loadData();
+    msg.innerText="✅ تم الحفظ";
+
+  }catch(e){
+    console.error(e);
+    msg.innerText="❌ خطأ في رفع الصورة";
+  }
 };
 
-if(editId){
-await updateDoc(doc(db,"items",editId),data);
-editId=null;
-}else{
-await addDoc(collection(db,"items"),data);
-}
-
-clearForm();
-loadData();
-msg.innerText="✅ تم الحفظ";
-};
-
-function clearForm(){
-nameInput.value="";
-shelfSelect.value="";
-placeSelect.value="";
-notesInput.value="";
-imageInput.value="";
-}
-
-/* تحميل البيانات */
 async function loadData(){
-list.innerHTML="";
-gallery.innerHTML="";
-cache=[];
+  list.innerHTML="";
+  gallery.innerHTML="";
+  cache=[];
 
-const snap=await getDocs(collection(db,"items"));
-snap.forEach(d=>{
-const x={id:d.id,...d.data()};
-cache.push(x);
+  const snap=await getDocs(collection(db,"items"));
+  snap.forEach(d=>{
+    const x={id:d.id,...d.data()};
+    cache.push(x);
 
-const div=document.createElement("div");
-div.className="item";
-div.innerHTML=`
-<div>
-<b>${x.name}</b><br>
-رف ${x.shelf} - ${x.place||""}
-</div>
-<div class="item-right">
-${x.image?`<img src="${x.image}" onclick="editItem('${x.id}')">`:""}
-<button class="btn-edit" onclick="editItem('${x.id}')">✏️</button>
-<button class="btn-delete" onclick="deleteItem('${x.id}')">🗑️</button>
-</div>`;
-list.appendChild(div);
+    const div=document.createElement("div");
+    div.className="item";
 
-/* استديو */
-if(x.image){
-const img=document.createElement("img");
-img.src=x.image;
-img.onclick=()=>editItem(x.id);
-gallery.appendChild(img);
+    div.innerHTML=`
+      <div>
+        <b>${x.name}</b><br>
+        رف ${x.shelf} - ${x.place||""}
+      </div>
+      <div>
+        ${x.image ? `<img src="${x.image}" onclick="event.stopPropagation(); editItem('${x.id}')">` : ""}
+      </div>
+    `;
+
+    div.onclick=()=>editItem(x.id);
+    list.appendChild(div);
+
+    if(x.image){
+      const img=document.createElement("img");
+      img.src=x.image;
+      img.onclick=()=>editItem(x.id);
+      gallery.appendChild(img);
+    }
+  });
 }
-});
-}
 
-/* تعديل + الرجوع للأعلى */
 window.editItem=id=>{
-const x=cache.find(i=>i.id===id);
-if(!x)return;
-
-nameInput.value=x.name;
-shelfSelect.value=x.shelf;
-placeSelect.value=x.place;
-notesInput.value=x.notes;
-editId=id;
-msg.innerText="✏️ وضع التعديل";
-
-window.scrollTo({top:0,behavior:"smooth"});
-};
-
-/* حذف */
-window.deleteItem=async id=>{
-if(confirm("حذف العنصر؟")){
-await deleteDoc(doc(db,"items",id));
-loadData();
-}
+  const x=cache.find(i=>i.id===id);
+  if(!x)return;
+  nameInput.value=x.name;
+  shelfSelect.value=x.shelf;
+  placeSelect.value=x.place;
+  notesInput.value=x.notes;
+  editId=id;
+  window.scrollTo({top:0,behavior:"smooth"});
 };
 
 loadData();
-});
-</script>
-
-<script>
-function unlock(){
-if(document.getElementById("lockPass").value===window.PASSWORD){
-document.getElementById("lockScreen").style.display="none";
-}else{
-document.getElementById("lockMsg").innerText="كلمة المرور غير صحيحة";
-}
-}
-
-function showChangePass(){
-document.getElementById("changePassBox").style.display="flex";
-}
-
-function closeChangePass(){
-document.getElementById("changePassBox").style.display="none";
-}
-
-async function changePassword(){
-const oldP=document.getElementById("oldPass").value;
-const newP=document.getElementById("newPass").value;
-
-if(oldP!==window.PASSWORD){
-document.getElementById("changeMsg").innerText="كلمة المرور غير صحيحة";
-return;
-}
-
-await window.updatePasswordInDB(newP);
-document.getElementById("changeMsg").innerText="تم التغيير لجميع الأجهزة";
-}
 </script>
 
 </body>
